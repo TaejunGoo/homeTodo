@@ -51,8 +51,9 @@ Codex가 직접 구현하기보다 사용자가 React Native, Expo, Supabase, �
 - [x] Space 권한 모델 결정
 - [x] 알림 제외 결정
 - [x] Figma 작업을 위한 UI 정의 추가
-- [ ] 현재 문서 3종을 읽고 서로 충돌하는 내용 확인
-- [ ] Git 저장소 초기화 여부 결정
+- [x] 현재 문서 3종을 읽고 서로 충돌하는 내용 확인
+- [x] Git 저장소 초기화 여부 결정
+- [x] GitHub 원격 저장소 연결 확인
 
 산출물:
 
@@ -62,42 +63,58 @@ Codex가 직접 구현하기보다 사용자가 React Native, Expo, Supabase, �
 
 ### Phase 1. Figma 와이어프레임
 
-목표: 구현 전에 MVP 화면 흐름과 주요 UI 요소를 Figma로 그린다.
+목표: 구현 전에 MVP 화면 흐름과 주요 UI 요소를 확인한다.
+정교한 Figma 파일 완성은 목표로 하지 않고, Figma AI 결과와 `docs/figma-ai-prompt.md`를 화면 정의 참고 자료로 사용한다.
 
-- [ ] Figma 파일 생성
-- [ ] 모바일 기준 프레임 크기 선택
-- [ ] 공통 레이아웃 정의
+- [x] Figma 파일 생성
+- [x] `docs/figma-ai-prompt.md`를 참고해 Figma AI 초안 생성
+- [~] 모바일 기준 프레임 크기 선택
+- [x] 공통 레이아웃 정의
   - 상단 제목 영역
   - 본문 목록 영역
   - 하단 탭 또는 주요 버튼 영역
-- [ ] 로그인 화면 와이어프레임 작성
-- [ ] Space 선택 화면 와이어프레임 작성
-- [ ] 초대 코드 입력 화면 와이어프레임 작성
-- [ ] 오늘 화면 와이어프레임 작성
-- [ ] 전체 TODO 화면 와이어프레임 작성
-- [ ] TODO 생성/수정 화면 와이어프레임 작성
-- [ ] 완료 이력 화면 와이어프레임 작성
-- [ ] Space 설정 화면 와이어프레임 작성
-- [ ] 빈 상태, 로딩 상태, 에러 상태를 최소 1개씩 정의
-- [ ] `docs/homeTodo-planning.md`의 `9.7 Figma 화면 설계 기준`과 비교
+- [x] Apple HIG를 참고한 미니멀 UI 방향 정의
+- [~] 라이트/다크 모드 색상 기준 초안 작성
+- [x] 공통 컴포넌트 초안 작성
+  - Header
+  - TextInput
+  - PrimaryButton
+  - SecondaryButton
+  - IconButton
+  - FloatingActionButton
+  - PeriodSection
+  - ChoreListItem
+- [x] 로그인 화면 구조 정의
+- [x] Space 대시보드 화면 구조 정의
+- [x] Space 선택 모달 구조 정의
+- [x] Space 생성 화면 구조 정의
+- [x] 초대 코드 표시 또는 입력 UI 구조 정의
+- [x] 전체 TODO 화면 구조 정의
+- [x] TODO 생성/수정 화면 구조 정의
+- [x] 완료 이력 화면 구조 정의
+- [x] Space 설정 화면 구조 정의
+- [x] TODO 아이템의 기본/완료/스킵 후보 상태 정의
+- [~] 빈 상태, 로딩 상태, 에러 상태를 최소 1개씩 정의
+- [x] `docs/homeTodo-planning.md`의 `9.7 Figma 화면 설계 기준`과 비교
 - [ ] 화면 흐름 변경 사항이 있으면 기획서와 이 문서 함께 수정
 
 산출물:
 
-- Figma 와이어프레임
+- Figma AI 결과물
+- `docs/figma-ai-prompt.md`
 - 화면 목록과 컴포넌트 목록의 기획서 반영
 
 ### Phase 2. 로컬 개발 환경 확인
 
 목표: Expo 앱을 만들기 전에 로컬 도구 상태를 확인한다.
 
-- [ ] Node.js 버전 확인
-- [ ] pnpm 설치 여부 확인
-- [ ] Expo 계정 또는 Expo Go 사용 준비
-- [ ] iOS 또는 Android 실기기에서 Expo Go 설치 확인
-- [ ] 작업 폴더 구조 확인
-- [ ] Git 저장소 초기화
-- [ ] `.gitignore` 준비
+- [x] Node.js 버전 확인
+- [x] pnpm 설치 여부 확인
+- [x] Expo 계정 또는 Expo Go 사용 준비
+- [x] iOS 또는 Android 실기기에서 Expo Go 설치 확인
+- [x] 작업 폴더 구조 확인
+- [x] Git 저장소 초기화
+- [x] `.gitignore` 준비
 
 확인 기준:
 
@@ -109,14 +126,14 @@ Codex가 직접 구현하기보다 사용자가 React Native, Expo, Supabase, �
 
 목표: 앱과 공용 패키지를 나눌 수 있는 기본 모노레포 구조를 만든다.
 
-- [ ] `pnpm-workspace.yaml` 생성
-- [ ] 루트 `package.json` 생성
-- [ ] `apps/` 디렉터리 생성
-- [ ] `packages/` 디렉터리 생성
-- [ ] `docs/` 유지
-- [ ] 루트 명령어 전략 결정
-- [ ] 생성된 구조를 기획서의 모노레포 구조와 비교
-- [ ] 구조 변경이 있으면 기획서와 이 문서 함께 수정
+- [x] `pnpm-workspace.yaml` 생성
+- [x] 루트 `package.json` 생성
+- [x] `apps/` 디렉터리 생성
+- [x] `packages/` 디렉터리 생성
+- [x] `docs/` 유지
+- [x] 루트 명령어 전략 결정
+- [x] 생성된 구조를 기획서의 모노레포 구조와 비교
+- [x] 구조 변경이 있으면 기획서와 이 문서 함께 수정
 
 목표 구조:
 
@@ -134,13 +151,14 @@ homeTodo/
 
 목표: Expo Go에서 실행되는 최소 React Native 앱을 만든다.
 
-- [ ] `apps/mobile`에 Expo 앱 생성
-- [ ] TypeScript 템플릿 확인
-- [ ] Expo Router 사용 여부 확인
-- [ ] 개발 서버 실행
-- [ ] Expo Go로 앱 열기
+- [x] `apps/mobile`에 Expo 앱 생성
+- [x] TypeScript 템플릿 확인
+- [x] Expo Router 사용 여부 확인
+- [x] Expo Go 호환을 위해 SDK 54 선택
+- [x] 개발 서버 실행
+- [x] Expo Go로 앱 열기
 - [ ] 첫 화면 텍스트 수정 후 반영 확인
-- [ ] iOS/Android 중 가능한 환경에서 실행 확인
+- [x] iOS/Android 중 가능한 환경에서 실행 확인
 
 확인 기준:
 
@@ -354,4 +372,3 @@ homeTodo/
 - TODO 생성/수정
 - 완료 이력
 - Space 설정
-

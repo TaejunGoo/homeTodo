@@ -1,0 +1,21 @@
+{
+  "name": "homeTodo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "",
+  "scripts": {
+    "dev": "pnpm --filter mobile dev",
+    "start": "pnpm --filter mobile start"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.5.1",
+      "onFail": "download"
+    }
+  },
+  "type": "module"
+}
