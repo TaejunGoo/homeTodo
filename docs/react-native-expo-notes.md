@@ -82,10 +82,7 @@ transform: [{ scale: 0.96 }],
 `ScrollView`는 하나의 컴포넌트처럼 보이지만 개념적으로는 바깥 스크롤 영역과 안쪽 콘텐츠 영역을 구분해서 봐야 한다.
 
 ```tsx
-<ScrollView
-  style={styles.scrollView}
-  contentContainerStyle={styles.scrollContent}
->
+<ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
   ...
 </ScrollView>
 ```
@@ -94,9 +91,7 @@ transform: [{ scale: 0.96 }],
 
 ```html
 <div class="scroll-view">
-  <div class="scroll-content">
-    ...
-  </div>
+  <div class="scroll-content">...</div>
 </div>
 ```
 
@@ -105,7 +100,7 @@ transform: [{ scale: 0.96 }],
 - `style`: 스크롤 영역 자체의 스타일
 - `contentContainerStyle`: 스크롤 안쪽 실제 콘텐츠의 padding, 정렬, 간격
 
-## 5. Safe Area는 웹의 env(safe-area-inset-*)와 비슷한 개념이다
+## 5. Safe Area는 웹의 env(safe-area-inset-\*)와 비슷한 개념이다
 
 웹에서 iPhone 노치나 홈 인디케이터를 고려할 때 `env(safe-area-inset-bottom)`을 쓰듯이, React Native에서는 `react-native-safe-area-context`를 사용한다.
 
@@ -123,7 +118,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 ```tsx
 const insets = useSafeAreaInsets();
 
-<Pressable style={[styles.floatingButton, { bottom: insets.bottom + 24 }]} />
+<Pressable style={[styles.floatingButton, { bottom: insets.bottom + 24 }]} />;
 ```
 
 웹으로 비유하면 아래와 비슷하다.
@@ -141,9 +136,7 @@ CSS의 `position: fixed`는 없다.
 
 ```tsx
 <SafeAreaView style={styles.safeArea}>
-  <ScrollView contentContainerStyle={styles.scrollContent}>
-    ...
-  </ScrollView>
+  <ScrollView contentContainerStyle={styles.scrollContent}>...</ScrollView>
 
   <Pressable style={styles.floatingButton}>
     <Text>+</Text>
@@ -170,10 +163,7 @@ CSS의 `position: fixed`는 없다.
 <Pressable
   accessibilityRole="button"
   accessibilityLabel="TODO 만들기"
-  style={({ pressed }) => [
-    styles.floatingButton,
-    pressed && styles.floatingButtonPressed,
-  ]}
+  style={({ pressed }) => [styles.floatingButton, pressed && styles.floatingButtonPressed]}
 >
   <Text>+</Text>
 </Pressable>
@@ -301,19 +291,13 @@ React Native의 `TextInput`도 웹 React의 controlled input과 비슷하게 `va
 웹 React:
 
 ```tsx
-<input
-  value={title}
-  onChange={(event) => setTitle(event.target.value)}
-/>
+<input value={title} onChange={(event) => setTitle(event.target.value)} />
 ```
 
 React Native:
 
 ```tsx
-<TextInput
-  value={title}
-  onChangeText={setTitle}
-/>
+<TextInput value={title} onChangeText={setTitle} />
 ```
 
 `onChangeText`는 이벤트 객체가 아니라 변경된 문자열을 바로 넘긴다.

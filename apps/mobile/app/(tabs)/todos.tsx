@@ -20,13 +20,15 @@ export default function TodosScreen() {
           name="chevron.left.forwardslash.chevron.right"
           style={styles.headerImage}
         />
-      }>
+      }
+    >
       <ThemedView style={styles.titleContainer}>
         <ThemedText
           type="title"
           style={{
             fontFamily: Fonts.rounded,
-          }}>
+          }}
+        >
           전체 TODO
         </ThemedText>
       </ThemedView>

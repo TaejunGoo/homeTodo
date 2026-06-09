@@ -42,32 +42,29 @@ export default function HomeScreen() {
             <Text style={styles.spaceLabel}>현재 스페이스</Text>
             <Text style={styles.spaceName}>우리집</Text>
           </View>
-  
+
           <Pressable
-            accessibilityRole='button'
-            accessibilityLabel='스페이스 만들기'
-            hitSlop={8} 
-            style={({ pressed } ) => [
-              styles.headerButton,
-              pressed && styles.headerButtonPressed,
-            ]}
+            accessibilityRole="button"
+            accessibilityLabel="스페이스 만들기"
+            hitSlop={8}
+            style={({ pressed }) => [styles.headerButton, pressed && styles.headerButtonPressed]}
           >
             <Text style={styles.headerButtonText}>+</Text>
           </Pressable>
         </View>
-  
+
         <View style={styles.summary}>
           <Text style={styles.summaryTitle}>오늘 할 집안일</Text>
           <Text style={styles.summaryText}>현재 기간에 해야 할 일을 확인해요.</Text>
         </View>
-  
+
         {sections.map((section) => (
           <View key={section.title} style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>{section.title}</Text>
               <Text style={styles.progress}>{section.progress}</Text>
             </View>
-  
+
             {section.chores.map((chore) => (
               <Pressable key={chore.title} style={styles.choreItem}>
                 <Text style={styles.checkbox}>{chore.done ? '✓' : ''}</Text>
@@ -79,11 +76,10 @@ export default function HomeScreen() {
             ))}
           </View>
         ))}
-  
       </ScrollView>
-      <Pressable 
-        accessibilityRole='button'
-        accessibilityLabel='TODO 만들기'
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="TODO 만들기"
         onPress={() => router.push('/create-todo')}
         style={({ pressed }) => [
           styles.floatingButton,

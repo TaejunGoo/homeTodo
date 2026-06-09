@@ -515,4 +515,3 @@ Components:
 Use Korean sample text.
 Keep components clean, named, and easy to convert into React Native components.
 ```
-

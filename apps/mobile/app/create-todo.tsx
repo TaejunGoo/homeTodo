@@ -4,18 +4,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 
 export default function CreateTodoScreen() {
-    const [title, setTitle] = useState('');
-    type RecurrenceType = 'daily' | 'weekly' | 'monthly' | 'interval_days';
+  const [title, setTitle] = useState('');
+  type RecurrenceType = 'daily' | 'weekly' | 'monthly' | 'interval_days';
 
-    const recurrenceOptions: { label: string; value: RecurrenceType  }[] = [
-      { label: '매일', value: 'daily' },
-      { label: '매주', value: 'weekly' },
-      { label: '매월', value: 'monthly' },
-      { label: 'N일마다', value: 'interval_days' },
-    ];
+  const recurrenceOptions: { label: string; value: RecurrenceType }[] = [
+    { label: '매일', value: 'daily' },
+    { label: '매주', value: 'weekly' },
+    { label: '매월', value: 'monthly' },
+    { label: 'N일마다', value: 'interval_days' },
+  ];
 
-    const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('daily');
-    const [intervalDays, setIntervalDays] = useState<string>('3');
+  const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('daily');
+  const [intervalDays, setIntervalDays] = useState<string>('3');
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -43,7 +43,7 @@ export default function CreateTodoScreen() {
             placeholderTextColor="#99998E"
             value={title}
             onChangeText={setTitle}
-            autoCapitalize='none'
+            autoCapitalize="none"
             autoCorrect={false}
             returnKeyType="done"
           />
@@ -53,53 +53,53 @@ export default function CreateTodoScreen() {
           <Text style={styles.label}>반복 주기</Text>
 
           <View style={styles.segmentGroup}>
-            {
-                recurrenceOptions.map((option) => {
-                    const selected = option.value === recurrenceType;
-                    return (
-                        <Pressable
-                            key={option.value}
-                            accessibilityRole='button'
-                            accessibilityState={{ selected }}
-                            onPress={() => setRecurrenceType(option.value)}
-                            style={({ pressed }) => [
-                                styles.segment,
-                                selected && styles.segmentSelected,
-                                pressed && styles.segmentPressed,
-                            ]}
-                        >
-                            <Text style={[styles.segmentText, selected && styles.segmentTextSelected]}>{option.label}</Text>
-                        </Pressable>
-                    );
-                })
-            }
+            {recurrenceOptions.map((option) => {
+              const selected = option.value === recurrenceType;
+              return (
+                <Pressable
+                  key={option.value}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  onPress={() => setRecurrenceType(option.value)}
+                  style={({ pressed }) => [
+                    styles.segment,
+                    selected && styles.segmentSelected,
+                    pressed && styles.segmentPressed,
+                  ]}
+                >
+                  <Text style={[styles.segmentText, selected && styles.segmentTextSelected]}>
+                    {option.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
 
           {recurrenceType === 'interval_days' && (
             <View style={styles.intervalField}>
-                <Text style={styles.label}>반복 간격</Text>
-                <TextInput
-                    style={styles.input}
-                    value={intervalDays}
-                    onChangeText={setIntervalDays}
-                    keyboardType="number-pad"
-                    returnKeyType="done"
-                    placeholder="예: 3"
-                    placeholderTextColor="#99998E"
-                />
+              <Text style={styles.label}>반복 간격</Text>
+              <TextInput
+                style={styles.input}
+                value={intervalDays}
+                onChangeText={setIntervalDays}
+                keyboardType="number-pad"
+                returnKeyType="done"
+                placeholder="예: 3"
+                placeholderTextColor="#99998E"
+              />
             </View>
-            )}
+          )}
         </View>
       </View>
 
       <View style={styles.bottomAction}>
-        <Pressable 
-            disabled={title.trim().length === 0}
-            style={({pressed}) => [
-                styles.primaryButton,
-                title.trim().length === 0 && styles.primaryButtonDisabled,
-                pressed && title.trim().length > 0 && styles.primaryButtonPressed,
-            ]}
+        <Pressable
+          disabled={title.trim().length === 0}
+          style={({ pressed }) => [
+            styles.primaryButton,
+            title.trim().length === 0 && styles.primaryButtonDisabled,
+            pressed && title.trim().length > 0 && styles.primaryButtonPressed,
+          ]}
         >
           <Text style={styles.primaryButtonText}>생성</Text>
         </Pressable>
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   intervalField: {
     marginTop: 12,
     gap: 8,
-},
+  },
   bottomAction: {
     marginTop: 'auto',
     padding: 20,
@@ -211,5 +211,5 @@ const styles = StyleSheet.create({
   primaryButtonPressed: {
     opacity: 0.78,
     transform: [{ scale: 0.99 }],
-    },
+  },
 });

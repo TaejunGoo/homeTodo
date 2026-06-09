@@ -5,7 +5,10 @@
   "description": "",
   "scripts": {
     "dev": "pnpm --filter mobile dev",
-    "start": "pnpm --filter mobile start"
+    "start": "pnpm --filter mobile start",
+    "lint": "pnpm --filter mobile lint",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check"
   },
   "keywords": [],
   "author": "",
@@ -17,5 +20,8 @@
       "onFail": "download"
     }
   },
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "prettier": "^3.8.3"
+  }
 }
