@@ -315,3 +315,64 @@ React Native:
 `TextInput`의 `value`는 문자열이다.
 `keyboardType="number-pad"`를 사용해 숫자 키패드를 띄워도 입력값 자체는 string으로 들어온다.
 따라서 숫자로 저장하거나 검증해야 할 값은 입력 상태에서는 string으로 들고 있다가 제출 시점에 `Number(...)` 또는 `parseInt(...)`로 변환하는 편이 자연스럽다.
+
+## 15. 입력값은 제출 시점에 정리하고 검증한다
+
+문자열 입력은 저장 전에 `trim()`으로 앞뒤 공백을 제거한다.
+사용자가 공백만 입력한 값을 유효한 제목으로 저장하지 않기 위해서다.
+
+```tsx
+const trimmedTitle = title.trim();
+
+if (trimmedTitle.length === 0) {
+  setErrorMessage('제목을 입력해주세요.');
+  return;
+}
+```
+
+숫자 입력은 `TextInput`에서 string으로 들어오므로 제출 시점에 number로 변환하고 검증한다.
+
+```tsx
+const intervalNumber = Number(intervalDays);
+
+if (!Number.isInteger(intervalNumber) || intervalNumber < 1) {
+  setErrorMessage('반복 간격은 1 이상의 숫자로 입력해주세요.');
+  return;
+}
+```
+
+`Number.isInteger(...)`는 값이 정수인지 확인한다.
+`N일마다` 반복 간격은 `1`, `2`, `3` 같은 양의 정수여야 하므로 `0`, `-1`, `1.5`, `NaN` 같은 값은 막는다.
+
+날짜는 임시로 아래처럼 ISO 문자열의 날짜 부분만 잘라 사용했다.
+
+```tsx
+const today = new Date().toISOString().slice(0, 10);
+```
+
+이 값은 `YYYY-MM-DD` 형식이다.
+다만 `toISOString()`은 UTC 기준이므로 한국 시간 기준의 오늘 날짜와 어긋날 수 있다.
+실제 반복 계산 단계에서는 로컬 날짜 또는 명시적인 날짜 유틸로 다시 다룬다.
+
+## 16. JSON.stringify의 두 번째와 세 번째 인자
+
+`JSON.stringify(value, replacer, space)`는 JavaScript 값을 JSON 문자열로 바꾼다.
+
+```tsx
+JSON.stringify(payload, null, 2);
+```
+
+두 번째 인자인 `replacer`는 특정 필드를 제외하거나 값을 바꿔 직렬화하고 싶을 때 사용한다.
+지금은 별도 가공이 필요 없으므로 `null`을 넣었다.
+
+세 번째 인자인 `space`는 들여쓰기 간격이다.
+`2`를 넣으면 사람이 읽기 좋은 2칸 들여쓰기 JSON 문자열이 만들어진다.
+
+```json
+{
+  "title": "화장실 청소",
+  "recurrence_type": "weekly"
+}
+```
+
+`space`를 생략하면 한 줄 JSON이 된다.

@@ -3,19 +3,51 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 
+type RecurrenceType = 'daily' | 'weekly' | 'monthly' | 'interval_days';
+const recurrenceOptions: { label: string; value: RecurrenceType }[] = [
+  { label: '매일', value: 'daily' },
+  { label: '매주', value: 'weekly' },
+  { label: '매월', value: 'monthly' },
+  { label: 'N일마다', value: 'interval_days' },
+];
+
 export default function CreateTodoScreen() {
   const [title, setTitle] = useState('');
-  type RecurrenceType = 'daily' | 'weekly' | 'monthly' | 'interval_days';
-
-  const recurrenceOptions: { label: string; value: RecurrenceType }[] = [
-    { label: '매일', value: 'daily' },
-    { label: '매주', value: 'weekly' },
-    { label: '매월', value: 'monthly' },
-    { label: 'N일마다', value: 'interval_days' },
-  ];
-
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('daily');
   const [intervalDays, setIntervalDays] = useState<string>('3');
+  const [errorMsg, setErrorMsg] = useState<string>('');
+  const [previewPayload, setPreviewPayload] = useState<string | null>(null);
+
+  const handleCreate = () => {
+    const trimmedTitle = title.trim();
+    if (trimmedTitle.length === 0) {
+      setErrorMsg('제목을 입력해주세요.');
+      setPreviewPayload(null);
+      return;
+    }
+
+    const intervalNumber = Number(intervalDays);
+
+    if (
+      recurrenceType === 'interval_days' &&
+      (!Number.isInteger(intervalNumber) || intervalNumber <= 0)
+    ) {
+      setErrorMsg('반복 간격은 1 이상의 정수여야 합니다.');
+      setPreviewPayload(null);
+      return;
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    const payload = {
+      title: trimmedTitle,
+      recurrence_type: recurrenceType,
+      recurrence_value: recurrenceType === 'interval_days' ? intervalNumber : null,
+      start_date: today,
+    };
+
+    setErrorMsg('');
+    setPreviewPayload(JSON.stringify(payload, null, 2));
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -54,23 +86,13 @@ export default function CreateTodoScreen() {
 
           <View style={styles.segmentGroup}>
             {recurrenceOptions.map((option) => {
-              const selected = option.value === recurrenceType;
               return (
-                <Pressable
+                <RecurrenceOptionButton
                   key={option.value}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected }}
+                  label={option.label}
+                  selected={option.value === recurrenceType}
                   onPress={() => setRecurrenceType(option.value)}
-                  style={({ pressed }) => [
-                    styles.segment,
-                    selected && styles.segmentSelected,
-                    pressed && styles.segmentPressed,
-                  ]}
-                >
-                  <Text style={[styles.segmentText, selected && styles.segmentTextSelected]}>
-                    {option.label}
-                  </Text>
-                </Pressable>
+                />
               );
             })}
           </View>
@@ -89,6 +111,14 @@ export default function CreateTodoScreen() {
               />
             </View>
           )}
+          {errorMsg.length > 0 && <Text style={styles.errorText}>{errorMsg}</Text>}
+
+          {previewPayload && (
+            <View style={styles.previewBox}>
+              <Text style={styles.previewTitle}>생성될 데이터</Text>
+              <Text style={styles.previewText}>{previewPayload}</Text>
+            </View>
+          )}
         </View>
       </View>
 
@@ -100,6 +130,7 @@ export default function CreateTodoScreen() {
             title.trim().length === 0 && styles.primaryButtonDisabled,
             pressed && title.trim().length > 0 && styles.primaryButtonPressed,
           ]}
+          onPress={handleCreate}
         >
           <Text style={styles.primaryButtonText}>생성</Text>
         </Pressable>
@@ -107,6 +138,29 @@ export default function CreateTodoScreen() {
     </SafeAreaView>
   );
 }
+
+interface RecurrenceOptionButtonProps {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}
+
+const RecurrenceOptionButton = ({ label, selected, onPress }: RecurrenceOptionButtonProps) => {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.segment,
+        selected && styles.segmentSelected,
+        pressed && styles.segmentPressed,
+      ]}
+    >
+      <Text style={[styles.segmentText, selected && styles.segmentTextSelected]}>{label}</Text>
+    </Pressable>
+  );
+};
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -211,5 +265,27 @@ const styles = StyleSheet.create({
   primaryButtonPressed: {
     opacity: 0.78,
     transform: [{ scale: 0.99 }],
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#C0392B',
+  },
+  previewBox: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#D9D7CD',
+    backgroundColor: '#FFFFFF',
+    padding: 14,
+    gap: 8,
+  },
+  previewTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#55564E',
+  },
+  previewText: {
+    fontSize: 13,
+    lineHeight: 19,
+    color: '#1F2520',
   },
 });

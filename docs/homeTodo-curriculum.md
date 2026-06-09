@@ -291,6 +291,7 @@ homeTodo/
 목표: DB에 Occurrence를 저장하지 않고 프론트에서 현재 기간의 할 일을 계산한다.
 
 - [ ] 기간 계산 유틸 위치 결정
+- [ ] `date-fns` 도입 여부 결정
 - [ ] daily 기간 계산
 - [ ] weekly ISO 주차 계산
 - [ ] monthly 기간 계산
