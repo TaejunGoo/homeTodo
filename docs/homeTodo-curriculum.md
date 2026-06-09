@@ -38,6 +38,9 @@ Codex가 직접 구현하기보다 사용자가 React Native, Expo, Supabase, �
 - `[~]`: 진행 중
 - `[x]`: 완료
 
+사용자는 React, Next.js, JavaScript 기반 UI 구현 경험이 있으므로 React 기본 문법, 배열 렌더링, 컴포넌트 기초 설명은 생략하거나 짧게 다룬다.
+실습 설명은 React Native와 Expo에서 달라지는 지점에 집중한다. 특히 네이티브 컴포넌트, `StyleSheet`, 모바일 레이아웃, Safe Area, 터치 인터랙션, Expo Router, Expo Go 제약, 플랫폼별 차이, Supabase 연동 흐름을 우선 다룬다.
+
 ## 4. 전체 단계
 
 ### Phase 0. 기획 고정과 작업 준비

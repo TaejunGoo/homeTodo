@@ -1,98 +1,228 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { router } from 'expo-router';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+const sections = [
+  {
+    title: '매일',
+    progress: '1/2 완료',
+    chores: [
+      { title: '분리수거', done: true },
+      { title: '싱크대 정리', done: false },
+    ],
+  },
+  {
+    title: '매주',
+    progress: '0/2 완료',
+    chores: [
+      { title: '화장실 청소', done: false },
+      { title: '침구 세탁', done: false },
+    ],
+  },
+  {
+    title: '매월',
+    progress: '0/1 완료',
+    chores: [{ title: '냉장고 정리', done: false }],
+  },
+  {
+    title: 'N일마다',
+    progress: '0/1 완료',
+    chores: [{ title: '정수기 필터 확인', done: false }],
+  },
+];
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">homeTodo</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">함께 관리하는 집안일 TODO</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const insets = useSafeAreaInsets();
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.spaceLabel}>현재 스페이스</Text>
+            <Text style={styles.spaceName}>우리집</Text>
+          </View>
+  
+          <Pressable
+            accessibilityRole='button'
+            accessibilityLabel='스페이스 만들기'
+            hitSlop={8} 
+            style={({ pressed } ) => [
+              styles.headerButton,
+              pressed && styles.headerButtonPressed,
+            ]}
+          >
+            <Text style={styles.headerButtonText}>+</Text>
+          </Pressable>
+        </View>
+  
+        <View style={styles.summary}>
+          <Text style={styles.summaryTitle}>오늘 할 집안일</Text>
+          <Text style={styles.summaryText}>현재 기간에 해야 할 일을 확인해요.</Text>
+        </View>
+  
+        {sections.map((section) => (
+          <View key={section.title} style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>{section.title}</Text>
+              <Text style={styles.progress}>{section.progress}</Text>
+            </View>
+  
+            {section.chores.map((chore) => (
+              <Pressable key={chore.title} style={styles.choreItem}>
+                <Text style={styles.checkbox}>{chore.done ? '✓' : ''}</Text>
+                <Text style={[styles.choreTitle, chore.done && styles.choreDone]}>
+                  {chore.title}
+                </Text>
+                <Text style={styles.more}>...</Text>
+              </Pressable>
+            ))}
+          </View>
+        ))}
+  
+      </ScrollView>
+      <Pressable 
+        accessibilityRole='button'
+        accessibilityLabel='TODO 만들기'
+        onPress={() => router.push('/create-todo')}
+        style={({ pressed }) => [
+          styles.floatingButton,
+          { bottom: insets.bottom + 24 },
+          pressed && styles.floatingButtonPressed,
+        ]}
+      >
+        <Text style={styles.floatingButtonText}>+</Text>
+      </Pressable>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F7F7F4',
+  },
+  content: {
+    padding: 20,
+    paddingTop: 20,
+    paddingBottom: 120,
+  },
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'space-between',
+    marginBottom: 24,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  spaceLabel: {
+    fontSize: 13,
+    color: '#77776B',
+    marginBottom: 4,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
+  spaceName: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#1F2520',
+  },
+  headerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#1F2520',
+  },
+  headerButtonPressed: {
+    opacity: 0.72,
+    transform: [{ scale: 0.96 }],
+  },
+  headerButtonText: {
+    fontSize: 24,
+    color: '#FFFFFF',
+    lineHeight: 24,
+  },
+  summary: {
+    marginBottom: 20,
+  },
+  summaryTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1F2520',
+    marginBottom: 6,
+  },
+  summaryText: {
+    fontSize: 15,
+    color: '#77776B',
+  },
+  section: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#E4E2DA',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#1F2520',
+  },
+  progress: {
+    fontSize: 14,
+    color: '#77776B',
+  },
+  choreItem: {
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#EEEEEA',
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    textAlign: 'center',
+    lineHeight: 24,
+    backgroundColor: '#E8F2E8',
+    color: '#2F7D4A',
+    fontWeight: '700',
+  },
+  choreTitle: {
+    flex: 1,
+    fontSize: 16,
+    color: '#1F2520',
+  },
+  choreDone: {
+    color: '#8B8B80',
+    textDecorationLine: 'line-through',
+  },
+  more: {
+    fontSize: 18,
+    color: '#8B8B80',
+  },
+  floatingButton: {
     position: 'absolute',
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#2F6F67',
+  },
+  floatingButtonPressed: {
+    opacity: 0.72,
+    transform: [{ scale: 0.96 }],
+  },
+  floatingButtonText: {
+    fontSize: 32,
+    color: '#FFFFFF',
+    lineHeight: 36,
   },
 });

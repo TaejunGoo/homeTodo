@@ -193,3 +193,6 @@ React Native와 Expo는 웹 개발과 비슷한 부분과 다른 부분을 구�
 - 모노레포 구조를 사용한다.
 - Figma 디자인 작업도 실습 과정에 포함한다.
 - Codex는 기본적으로 직접 구현하지 않고 사용자가 직접 경험하도록 안내한다.
+- 사용자는 React, Next.js, JavaScript 기반 UI 구현 경험이 있으므로 React 기본 문법, 배열 렌더링, 컴포넌트 기초 설명은 생략하거나 짧게 다룬다.
+- 학습 안내는 React Native와 Expo에서 달라지는 지점에 초점을 둔다. 예를 들어 네이티브 컴포넌트, 스타일링 차이, 모바일 레이아웃, Expo Router, Expo Go 제약, 플랫폼별 동작, Supabase 연동 흐름을 우선 설명한다.
+- 실습 중 발견한 React Native와 Expo의 핵심 개념은 `docs/react-native-expo-notes.md`에 짧게 누적한다.
