@@ -283,6 +283,20 @@ router.back()
 이렇게 하면 스택이 `[홈, create-todo, 홈]`처럼 쌓일 수 있고, 홈에서 뒤로 갔을 때 다시 작성 화면이 나오는 어색한 경험이 생긴다.
 기준점 화면인 홈, 로그인, 탭 메인 화면은 불필요하게 `push`로 다시 쌓지 않는 편이 좋다.
 
+`Stack.Screen`을 나열한 순서는 z-index처럼 뒤에 있을수록 위에 뜬다는 뜻이 아니다.
+`Stack.Screen`은 특정 라우트에 어떤 옵션을 줄지 선언하는 목록에 가깝다.
+
+```tsx
+<Stack>
+  <Stack.Screen name="login" options={{ headerShown: false }} />
+  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+  <Stack.Screen name="create-todo" options={{ headerShown: false }} />
+</Stack>
+```
+
+실제 화면이 위에 쌓이는 순서는 선언 순서가 아니라 `router.push`, `router.replace`, `router.back` 같은 navigation action이 결정한다.
+따라서 `Stack.Screen` 순서는 앱 흐름을 사람이 읽기 좋은 순서로 정리하면 된다.
+
 ## 14. TextInput의 onChangeText는 문자열을 바로 받는다
 
 React Native의 `TextInput`도 웹 React의 controlled input과 비슷하게 `value`와 상태를 연결한다.
@@ -409,3 +423,30 @@ React Native에는 DOM이 없으므로 웹의 `<input type="checkbox" />`도 없
 
 TODO 완료 체크처럼 작고 단순한 상태 표시는 MVP 단계에서 `Pressable`과 `Text`/아이콘으로 직접 만드는 방식이 충분하다.
 다만 실제 체크박스 역할로 동작한다면 `accessibilityRole="checkbox"`와 `accessibilityState={{ checked }}`를 함께 고려한다.
+
+## 19. 화면 제목 블록은 Header보다 Heading에 가깝다
+
+`ScreenHeading`은 상단 고정 navigation header가 아니라 화면의 제목과 설명을 묶는 제목 블록이다.
+
+```tsx
+<ScreenHeading
+  title="스페이스 선택"
+  description="함께 관리할 집안일 공간을 선택해요."
+  showBackButton
+/>
+```
+
+나중에 현재 Space 선택, 우측 액션, 메뉴 버튼 등을 포함하는 앱 상단 바가 필요하면 별도의 `AppHeader`로 분리한다.
+
+## 20. ActivityIndicator는 React Native 기본 로딩 컴포넌트다
+
+`ActivityIndicator`는 React Native가 제공하는 기본 로딩 스피너다.
+iOS와 Android에서는 플랫폼의 네이티브 느낌에 맞는 로딩 인디케이터로 표시되고, web에서는 React Native Web이 대응되는 표시로 변환한다.
+
+```tsx
+import { ActivityIndicator } from 'react-native';
+
+<ActivityIndicator color="#2F6F67" size="small" />;
+```
+
+공통 로딩 UI를 만들 때는 `accessibilityRole="progressbar"`를 함께 고려한다.

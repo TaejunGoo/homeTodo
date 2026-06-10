@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 const members = [
@@ -34,12 +35,26 @@ export default function SettingsScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>초대</Text>
 
-        <Pressable style={styles.secondaryButton}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="초대 코드 만들기"
+          style={({ pressed }) => [
+            styles.secondaryButton,
+            pressed && styles.secondaryButtonPressed,
+          ]}
+        >
           <Text style={styles.secondaryButtonText}>초대 코드 만들기</Text>
         </Pressable>
       </View>
 
-      <Pressable style={styles.logoutButton}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="로그아웃"
+        style={({ pressed }) => [styles.logoutButton, pressed && styles.logoutButtonPressed]}
+        onPress={() => {
+          router.replace('/login');
+        }}
+      >
         <Text style={styles.logoutButtonText}>로그아웃</Text>
       </Pressable>
     </ScrollView>
@@ -118,6 +133,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
   },
+  secondaryButtonPressed: {
+    opacity: 0.78,
+    transform: [{ scale: 0.99 }],
+  },
   secondaryButtonText: {
     fontSize: 16,
     fontWeight: '700',
@@ -129,6 +148,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#F2E4E1',
+  },
+  logoutButtonPressed: {
+    opacity: 0.78,
+    transform: [{ scale: 0.99 }],
   },
   logoutButtonText: {
     fontSize: 16,

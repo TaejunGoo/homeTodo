@@ -39,10 +39,16 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="스페이스 선택"
+            hitSlop={8}
+            onPress={() => router.push('/select-space')}
+            style={({ pressed }) => [styles.spaceSelector, pressed && styles.spaceSelectorPressed]}
+          >
             <Text style={styles.spaceLabel}>현재 스페이스</Text>
             <Text style={styles.spaceName}>우리집</Text>
-          </View>
+          </Pressable>
 
           <Pressable
             accessibilityRole="button"
@@ -114,6 +120,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 24,
+  },
+  spaceSelector: {
+    flex: 1,
+  },
+  spaceSelectorPressed: {
+    opacity: 0.72,
   },
   spaceLabel: {
     fontSize: 13,
