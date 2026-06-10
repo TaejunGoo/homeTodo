@@ -1,3 +1,4 @@
+import { ChoreListItem } from '@/components/chore-list-item';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,27 +8,27 @@ const sections = [
     title: '매일',
     progress: '1/2 완료',
     chores: [
-      { title: '분리수거', done: true },
-      { title: '싱크대 정리', done: false },
+      { id: 'today-daily-recycling', title: '분리수거', done: true },
+      { id: 'today-daily-sink-cleanup', title: '싱크대 정리', done: false },
     ],
   },
   {
     title: '매주',
     progress: '0/2 완료',
     chores: [
-      { title: '화장실 청소', done: false },
-      { title: '침구 세탁', done: false },
+      { id: 'today-weekly-bathroom-cleaning', title: '화장실 청소', done: false },
+      { id: 'today-weekly-bedding-laundry', title: '침구 세탁', done: false },
     ],
   },
   {
     title: '매월',
     progress: '0/1 완료',
-    chores: [{ title: '냉장고 정리', done: false }],
+    chores: [{ id: 'today-monthly-fridge-cleanup', title: '냉장고 정리', done: false }],
   },
   {
     title: 'N일마다',
     progress: '0/1 완료',
-    chores: [{ title: '정수기 필터 확인', done: false }],
+    chores: [{ id: 'today-interval-water-filter-check', title: '정수기 필터 확인', done: false }],
   },
 ];
 
@@ -66,13 +67,18 @@ export default function HomeScreen() {
             </View>
 
             {section.chores.map((chore) => (
-              <Pressable key={chore.title} style={styles.choreItem}>
-                <Text style={styles.checkbox}>{chore.done ? '✓' : ''}</Text>
-                <Text style={[styles.choreTitle, chore.done && styles.choreDone]}>
-                  {chore.title}
-                </Text>
-                <Text style={styles.more}>...</Text>
-              </Pressable>
+              <ChoreListItem
+                key={chore.id}
+                title={chore.title}
+                completed={chore.done}
+                showCheckbox
+                onPress={() => {
+                  // 추후 상세/수정화면 이동
+                }}
+                onMenuPress={() => {
+                  // 추후 바텀시트 오픈
+                }}
+              />
             ))}
           </View>
         ))}
@@ -170,37 +176,6 @@ const styles = StyleSheet.create({
   progress: {
     fontSize: 14,
     color: '#77776B',
-  },
-  choreItem: {
-    minHeight: 48,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#EEEEEA',
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    textAlign: 'center',
-    lineHeight: 24,
-    backgroundColor: '#E8F2E8',
-    color: '#2F7D4A',
-    fontWeight: '700',
-  },
-  choreTitle: {
-    flex: 1,
-    fontSize: 16,
-    color: '#1F2520',
-  },
-  choreDone: {
-    color: '#8B8B80',
-    textDecorationLine: 'line-through',
-  },
-  more: {
-    fontSize: 18,
-    color: '#8B8B80',
   },
   floatingButton: {
     position: 'absolute',

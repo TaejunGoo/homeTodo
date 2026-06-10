@@ -376,3 +376,36 @@ JSON.stringify(payload, null, 2);
 ```
 
 `space`를 생략하면 한 줄 JSON이 된다.
+
+## 17. 중첩 Pressable은 피하고 형제 터치 영역으로 나눈다
+
+행 전체와 더보기 메뉴처럼 서로 다른 터치 액션이 필요할 때는 `Pressable` 안에 또 다른 `Pressable`을 넣지 않는 편이 좋다.
+웹에서 `button` 안에 `button`을 넣지 않는 것과 비슷하다.
+
+권장 구조:
+
+```tsx
+<View style={styles.item}>
+  <Pressable style={styles.mainArea} onPress={onPress}>
+    <Text>화장실 청소</Text>
+  </Pressable>
+
+  <Pressable onPress={onMenuPress}>
+    <Text>...</Text>
+  </Pressable>
+</View>
+```
+
+이렇게 두 터치 영역을 형제로 두면 이벤트 흐름과 접근성 역할이 더 명확하다.
+
+## 18. React Native에는 HTML checkbox input이 없다
+
+React Native에는 DOM이 없으므로 웹의 `<input type="checkbox" />`도 없다.
+체크 UI는 보통 아래 방식 중 하나로 만든다.
+
+- `Pressable`로 직접 체크박스 모양을 구현한다.
+- 설정성 토글에는 네이티브 `Switch`를 사용한다.
+- 네이티브 체크박스가 필요하면 Expo 호환 라이브러리나 커뮤니티 패키지를 검토한다.
+
+TODO 완료 체크처럼 작고 단순한 상태 표시는 MVP 단계에서 `Pressable`과 `Text`/아이콘으로 직접 만드는 방식이 충분하다.
+다만 실제 체크박스 역할로 동작한다면 `accessibilityRole="checkbox"`와 `accessibilityState={{ checked }}`를 함께 고려한다.

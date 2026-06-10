@@ -22,6 +22,7 @@
   },
   "type": "module",
   "devDependencies": {
+    "eslint-plugin-react-native": "^5.0.0",
     "prettier": "^3.8.3"
   }
 }
