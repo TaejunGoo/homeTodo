@@ -1,3 +1,4 @@
+import { supabase } from '@/lib/supabase';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -7,6 +8,13 @@ const members = [
 ];
 
 export default function SettingsScreen() {
+  async function handleLogout() {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      return;
+    }
+    router.replace('/login');
+  }
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <View style={styles.header}>
@@ -51,9 +59,7 @@ export default function SettingsScreen() {
         accessibilityRole="button"
         accessibilityLabel="로그아웃"
         style={({ pressed }) => [styles.logoutButton, pressed && styles.logoutButtonPressed]}
-        onPress={() => {
-          router.replace('/login');
-        }}
+        onPress={handleLogout}
       >
         <Text style={styles.logoutButtonText}>로그아웃</Text>
       </Pressable>

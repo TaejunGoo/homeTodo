@@ -450,3 +450,153 @@ import { ActivityIndicator } from 'react-native';
 ```
 
 공통 로딩 UI를 만들 때는 `accessibilityRole="progressbar"`를 함께 고려한다.
+
+## 21. 에러 상태는 alert 역할을 줄 수 있다
+
+사용자에게 오류 상태를 명확히 알려주는 UI는 `accessibilityRole="alert"`를 고려한다.
+
+```tsx
+<View accessibilityRole="alert">
+  <Text>문제가 발생했어요</Text>
+  <Text>TODO 목록을 불러오지 못했어요.</Text>
+</View>
+```
+
+재시도 버튼이 있으면 `Pressable`에 `accessibilityRole="button"`과 명확한 `accessibilityLabel`을 함께 둔다.
+
+## 22. Supabase Auth는 저장소와 앱 생명주기를 함께 봐야 한다
+
+React Native 앱에서 Supabase Auth를 사용할 때는 로그인 요청만 연결하는 것이 아니라, 세션을 어디에 저장하고 토큰 갱신을 언제 수행할지도 함께 결정해야 한다.
+
+```ts
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    storage: AsyncStorage,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false,
+    lock: processLock,
+  },
+});
+```
+
+- `persistSession`: 앱을 껐다 켜도 로그인 세션을 유지한다.
+- `autoRefreshToken`: access token이 만료되기 전에 refresh token으로 세션을 갱신한다.
+- `AsyncStorage`: iOS/Android에서 세션을 저장할 공간이다. 웹의 localStorage와 비슷한 역할로 이해할 수 있다.
+- `detectSessionInUrl: false`: 모바일 앱에서는 웹 URL에서 세션을 읽는 흐름을 기본으로 쓰지 않기 때문에 꺼둔다.
+
+웹과 네이티브 앱은 저장소와 생명주기가 다르므로 `Platform.OS !== 'web'` 같은 분기가 필요할 수 있다.
+웹에서는 Supabase가 브라우저 저장소를 사용할 수 있고, 네이티브 앱에서는 `AsyncStorage`를 명시하는 편이 자연스럽다.
+
+`AppState`를 함께 사용하면 앱이 foreground일 때만 토큰 자동 갱신을 돌리고, background로 내려가면 멈출 수 있다.
+이 처리는 로그인 유지뿐 아니라 배터리 사용량과 앱 생명주기 관리에도 영향을 준다.
+
+## 23. Promise, async, await는 비동기 결과를 다루는 문법이다
+
+네트워크 요청처럼 시간이 걸리는 작업은 즉시 결과를 반환하지 않는다.
+JavaScript에서는 이런 "나중에 끝나는 작업"의 결과를 `Promise`로 표현한다.
+
+```ts
+const promise = supabase.auth.signInWithPassword({
+  email,
+  password,
+});
+```
+
+`async function`은 항상 `Promise`를 반환한다.
+함수 안에서 일반 값을 `return`해도 실제 호출자는 Promise로 감싼 값을 받는다.
+
+```ts
+async function getName() {
+  return '태준';
+}
+
+const name = await getName();
+```
+
+`await`는 Promise가 처리될 때까지 해당 `async` 함수의 다음 줄 실행을 기다린다.
+앱 전체가 멈추는 것은 아니며, 화면 렌더링이나 다른 이벤트 처리는 계속될 수 있다.
+
+Promise는 `then/catch`로도 처리할 수 있고, `async/await`와 `try/catch`로도 처리할 수 있다.
+
+```ts
+try {
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
+    setErrorMessage('이메일 또는 비밀번호를 확인해 주세요.');
+    return;
+  }
+} catch {
+  setErrorMessage('잠시 후 다시 시도해 주세요.');
+}
+```
+
+Supabase Auth의 일반적인 로그인 실패는 함수가 예외를 던지기보다 응답 객체의 `error`에 담긴다.
+반면 네트워크 문제나 예상하지 못한 런타임 오류는 `catch`에서 처리할 수 있다.
+`finally`는 성공, 실패, `return` 여부와 관계없이 마지막에 실행되므로 로딩 상태를 끄는 데 적합하다.
+
+## 24. Auth와 Session은 역할이 다르다
+
+Auth는 사용자가 누구인지 확인하는 인증 과정이다.
+이메일/비밀번호, 매직링크, OAuth 같은 방식으로 인증할 수 있다.
+
+인증이 성공하면 Supabase는 session을 발급한다.
+session에는 user 정보, access token, refresh token 등이 들어 있고, 앱은 이 session을 로컬 저장소에 보관한다.
+
+```text
+Auth 성공
+-> session 발급
+-> 앱 저장소에 session 저장
+-> 이후 Supabase 요청에서 token으로 로그인 상태 증명
+```
+
+session은 로그인 상태를 증명하는 토큰 묶음에 가깝다.
+실제 DB row 접근 권한은 나중에 RLS policy가 token의 사용자 정보를 바탕으로 판단한다.
+
+```sql
+auth.uid() = user_id
+```
+
+즉, session은 "누구인지"를 증명하고, RLS는 "무엇을 할 수 있는지"를 제한한다.
+
+## 25. AuthGate는 보안 장치라기보다 UX와 라우팅 장치다
+
+`AuthGate`는 앱 진입 시 저장된 session을 확인하고, 로그인 상태에 맞는 route로 정리하는 컴포넌트다.
+
+```tsx
+<AuthGate>
+  <Stack />
+</AuthGate>
+```
+
+Expo Router에서는 루트 `Stack`을 조건부로 없애기보다 항상 마운트해 두고, session 확인 중에는 overlay를 덮는 방식이 무난하다.
+라우팅 구조가 준비된 상태에서 `router.replace`를 호출할 수 있기 때문이다.
+
+```tsx
+return (
+  <>
+    {children}
+    {!isAuthReady ? <View style={styles.authLoadingScreen} /> : null}
+  </>
+);
+```
+
+이 overlay는 보안 장치가 아니라 로그인 화면이 잠깐 보이는 auth flicker를 줄이는 UX 장치다.
+웹에서는 개발자 도구로 overlay를 숨길 수 있고, route guard도 클라이언트에서 우회될 수 있다.
+
+따라서 보안의 최종 방어선은 클라이언트 화면 가드가 아니라 Supabase RLS다.
+
+```text
+AuthGate
+= 자연스러운 화면 흐름과 깜빡임 방지
+
+Supabase Auth
+= 사용자가 누구인지 확인
+
+RLS Policy
+= 서버에서 이 사용자가 이 데이터에 접근 가능한지 판단
+```

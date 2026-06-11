@@ -1,5 +1,6 @@
 import { ChoreListItem } from '@/components/chore-list-item';
 import { EmptyState } from '@/components/empty-state';
+import { ErrorState } from '@/components/error-state';
 import { LoadingState } from '@/components/loading-state';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -30,6 +31,7 @@ const todoSections = [
 
 export default function TodosScreen() {
   const isLoading = false;
+  const hasError = false;
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <View style={styles.header}>
@@ -37,6 +39,13 @@ export default function TodosScreen() {
         <Text style={styles.description}>활성화된 집안일을 반복 주기별로 확인해요.</Text>
       </View>
       {isLoading && <LoadingState message="TODO 목록을 불러오는 중이에요." />}
+      {hasError && (
+        <ErrorState
+          message="TODO 목록을 불러오지 못했어요."
+          actionLabel="다시 시도"
+          onActionPress={() => {}}
+        />
+      )}
       {todoSections.map((section) => (
         <View key={section.title} style={styles.section}>
           <Text style={styles.sectionTitle}>{section.title}</Text>

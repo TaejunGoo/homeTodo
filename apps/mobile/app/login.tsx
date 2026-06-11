@@ -1,3 +1,4 @@
+import { supabase } from '@/lib/supabase';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -6,12 +7,35 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const isLoginDisabled = email.trim().length === 0 || password.length === 0;
+  const isLoginDisabled = email.trim().length === 0 || password.length === 0 || isSubmitting;
 
-  function handleLogin() {
-    // Supabase Auth 연결 전까지는 홈으로 이동하는 흐름만 확인한다.
-    router.replace('/');
+  async function handleLogin() {
+    const trimmedEmail = email.trim();
+
+    setErrorMsg('');
+    setIsSubmitting(true);
+
+    try {
+      // 로그인 시도, supabase 객체의 error 발생시 구조분해로 받아 에러 표출
+      const { error } = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
+        password,
+      });
+
+      if (error) {
+        setErrorMsg('이메일 또는 비밀번호를 확인해 주세요.');
+        return;
+      }
+      router.replace('/');
+    } catch {
+      // supabase 외부 오류
+      setErrorMsg('잠시 후 다시 시도해 주세요.');
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -54,6 +78,11 @@ export default function LoginScreen() {
             />
           </View>
 
+          {errorMsg ? (
+            <Text accessibilityRole="alert" style={styles.errorMsg}>
+              {errorMsg}
+            </Text>
+          ) : null}
           <Text style={styles.helperText}>MVP에서는 미리 생성된 테스트 계정으로 로그인해요.</Text>
         </View>
 
@@ -69,7 +98,7 @@ export default function LoginScreen() {
             pressed && !isLoginDisabled && styles.primaryButtonPressed,
           ]}
         >
-          <Text style={styles.primaryButtonText}>로그인</Text>
+          <Text style={styles.primaryButtonText}>{isSubmitting ? '로그인 중...' : '로그인'}</Text>
         </Pressable>
       </View>
     </SafeAreaView>
@@ -120,6 +149,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     fontSize: 16,
     color: '#1F2520',
+  },
+  errorMsg: {
+    marginBottom: 12,
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#B3261E',
   },
   helperText: {
     fontSize: 13,
