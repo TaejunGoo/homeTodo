@@ -185,6 +185,32 @@ MVP의 `daily`, `weekly`, `monthly`는 특정 요일이나 특정 날짜에 고�
 - `completed_at`
 - `note`
 
+`chore_completions`는 현재 완료 상태를 나타낸다.
+해당 기간의 완료 row가 있으면 완료, 없으면 미완료로 판단한다.
+완료 취소는 row를 삭제하는 방식으로 처리한다.
+
+### 7.7 chore_completion_events
+
+- `id`
+- `chore_id`
+- `space_id`
+- `target_period_start`
+- `event_type`: `completed`, `uncompleted`
+- `actor_id`
+- `created_at`
+
+`chore_completion_events`는 완료/완료 취소 이력을 남기는 로그 테이블이다.
+예를 들어 A가 완료하고, B가 완료 취소하고, 다시 B가 완료하면 아래처럼 이벤트가 남는다.
+
+```text
+A completed
+B uncompleted
+B completed
+```
+
+현재 완료 여부는 `chore_completions`로 빠르게 판단하고, 누가 언제 완료/취소했는지의 이력은 `chore_completion_events`로 확인한다.
+로그 테이블은 수정/삭제를 허용하지 않는 방향으로 설계한다.
+
 ## 8. 권한 모델 초안
 
 Supabase RLS는 Space 멤버십을 기준으로 설계한다.
@@ -193,7 +219,19 @@ Supabase RLS는 Space 멤버십을 기준으로 설계한다.
 - Space 멤버만 해당 Space의 TODO를 완료할 수 있다.
 - Space 멤버는 모두 동일한 권한을 가진다.
 - Space 멤버는 TODO를 생성, 수정, 삭제할 수 있다.
+- Space 멤버는 완료 기록을 생성하거나 삭제하여 완료/완료 취소를 처리할 수 있다.
+- 완료/완료 취소 이벤트 로그는 Space 멤버가 조회할 수 있고, actor가 본인인 이벤트만 생성할 수 있다.
 - MVP에서는 owner, admin, member 같은 역할을 구분하지 않는다.
+
+RLS 적용 방향:
+
+- `profiles`: 사용자는 자기 profile을 조회, 생성, 수정할 수 있다.
+- `spaces`: Space 멤버는 Space를 조회/수정할 수 있고, 로그인 사용자는 자기 id를 `created_by`로 하여 Space를 생성할 수 있다.
+- `space_members`: Space 멤버는 같은 Space의 멤버십 row를 조회할 수 있다. Space 생성자는 자신을 해당 Space의 멤버로 추가할 수 있다.
+- `space_invites`: Space 멤버는 해당 Space의 초대 코드를 조회, 생성, 수정할 수 있다. 초대 코드로 참여하는 흐름은 별도 RPC 함수로 처리한다.
+- `chores`: Space 멤버는 해당 Space의 Chore를 조회, 생성, 수정, 삭제할 수 있다.
+- `chore_completions`: Space 멤버는 완료 상태를 조회, 생성, 삭제할 수 있다. 수정은 허용하지 않는다.
+- `chore_completion_events`: Space 멤버는 이벤트 로그를 조회할 수 있고, 본인이 actor인 이벤트만 생성할 수 있다. 수정/삭제는 허용하지 않는다.
 
 ## 9. 화면 구성 초안
 

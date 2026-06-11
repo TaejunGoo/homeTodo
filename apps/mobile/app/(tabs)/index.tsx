@@ -1,4 +1,5 @@
 import { ChoreListItem } from '@/components/chore-list-item';
+import { useSpace } from '@/contexts/space-context';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -34,6 +35,7 @@ const sections = [
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
+  const { currentSpace } = useSpace();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -47,7 +49,7 @@ export default function HomeScreen() {
             style={({ pressed }) => [styles.spaceSelector, pressed && styles.spaceSelectorPressed]}
           >
             <Text style={styles.spaceLabel}>현재 스페이스</Text>
-            <Text style={styles.spaceName}>우리집</Text>
+            <Text style={styles.spaceName}>{currentSpace?.name ?? '스페이스 없음'}</Text>
           </Pressable>
 
           <Pressable

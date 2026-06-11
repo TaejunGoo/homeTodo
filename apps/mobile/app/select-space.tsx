@@ -1,14 +1,18 @@
 import { ScreenHeading } from '@/components/screen-heading';
+import { useSpace } from '@/contexts/space-context';
 import { router } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const spaces = [
-  { id: 'space-home', name: '우리집', memberCount: 2, selected: true },
-  { id: 'space-studio', name: '자취방', memberCount: 1, selected: false },
-];
-
 export default function SelectSpaceScreen() {
+  const { spaces, currentSpaceId, isLoading, errorMessage, selectSpace } = useSpace();
+  const [draftSpaceId, setDraftSpaceId] = useState<string | null>(currentSpaceId);
+  const isConfirmDisabled = !draftSpaceId;
+  useEffect(() => {
+    setDraftSpaceId(currentSpaceId);
+  }, [currentSpaceId]);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -21,34 +25,73 @@ export default function SelectSpaceScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>참여 중인 스페이스</Text>
 
-          {spaces.map((space) => (
-            <Pressable
-              key={space.id}
-              accessibilityRole="button"
-              accessibilityState={{ selected: space.selected }}
-              style={({ pressed }) => [
-                styles.spaceItem,
-                space.selected && styles.spaceItemSelected,
-                pressed && styles.spaceItemPressed,
-              ]}
-            >
-              <View style={styles.spaceTextGroup}>
-                <Text style={styles.spaceName}>{space.name}</Text>
-                <Text style={styles.spaceMeta}>{space.memberCount}명 참여 중</Text>
-              </View>
+          {isLoading ? <Text style={styles.stateText}>스페이스를 불러오는 중...</Text> : null}
 
-              {space.selected && <Text style={styles.selectedMark}>✓</Text>}
-            </Pressable>
-          ))}
+          {errorMessage ? (
+            <Text style={styles.errorText} accessibilityRole="alert">
+              {errorMessage}
+            </Text>
+          ) : null}
+
+          {!isLoading && !errorMessage && spaces.length === 0 ? (
+            <Text style={styles.stateText}>참여 중인 스페이스가 없어요.</Text>
+          ) : null}
+
+          {spaces.map((space) => {
+            const isSelected = space.id === draftSpaceId;
+
+            return (
+              <Pressable
+                key={space.id}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isSelected }}
+                onPress={() => setDraftSpaceId(space.id)}
+                style={({ pressed }) => [
+                  styles.spaceItem,
+                  isSelected && styles.spaceItemSelected,
+                  pressed && styles.spaceItemPressed,
+                ]}
+              >
+                <View style={styles.spaceTextGroup}>
+                  <Text style={styles.spaceName}>{space.name}</Text>
+                  <Text style={styles.spaceMeta}>참여 중</Text>
+                </View>
+
+                {isSelected ? <Text style={styles.selectedMark}>✓</Text> : null}
+              </Pressable>
+            );
+          })}
         </View>
 
         <View style={styles.actions}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="새 스페이스 만들기"
-            style={({ pressed }) => [styles.primaryButton, pressed && styles.primaryButtonPressed]}
+            accessibilityLabel="확인"
+            disabled={isConfirmDisabled}
+            onPress={() => {
+              if (draftSpaceId) {
+                selectSpace(draftSpaceId);
+                router.back();
+              }
+            }}
+            style={({ pressed }) => [
+              styles.primaryButton,
+              isConfirmDisabled && styles.primaryButtonDisabled,
+              pressed && styles.primaryButtonPressed,
+            ]}
           >
-            <Text style={styles.primaryButtonText}>새 스페이스 만들기</Text>
+            <Text style={styles.primaryButtonText}>확인</Text>
+          </Pressable>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="새 스페이스 만들기"
+            style={({ pressed }) => [
+              styles.secondaryButton,
+              pressed && styles.secondaryButtonPressed,
+            ]}
+          >
+            <Text style={styles.secondaryButtonText}>새 스페이스 만들기</Text>
           </Pressable>
 
           <Pressable
@@ -86,6 +129,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1F2520',
     marginBottom: 8,
+  },
+  stateText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#77776B',
+  },
+  errorText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#B3261E',
   },
   spaceItem: {
     minHeight: 64,
@@ -138,6 +191,9 @@ const styles = StyleSheet.create({
   primaryButtonPressed: {
     opacity: 0.78,
     transform: [{ scale: 0.99 }],
+  },
+  primaryButtonDisabled: {
+    backgroundColor: '#B9B9B0',
   },
   primaryButtonText: {
     fontSize: 17,

@@ -5,6 +5,7 @@ node_modules/
 .expo/
 dist/
 web-build/
+supabase/.temp/
 
 # Native build output
 android/

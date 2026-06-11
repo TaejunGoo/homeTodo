@@ -600,3 +600,184 @@ Supabase Auth
 RLS Policy
 = 서버에서 이 사용자가 이 데이터에 접근 가능한지 판단
 ```
+
+## 26. 관계형 DB는 테이블을 나누고 foreign key로 연결한다
+
+관계형 데이터베이스에서는 데이터를 한 객체에 중첩해서 저장하기보다 의미별 테이블로 나누고, `id`와 foreign key로 관계를 표현한다.
+
+```text
+spaces
+= 공간 자체의 정보
+
+space_members
+= 어떤 user가 어떤 space에 속해 있는지 나타내는 연결표
+```
+
+`space_members`는 user id 배열을 가진 테이블이 아니라, row 하나가 하나의 멤버십을 뜻한다.
+
+```text
+space_id | user_id
+---------|--------
+space-1  | user-A
+space-1  | user-B
+space-2  | user-A
+```
+
+foreign key는 이 컬럼의 값이 다른 테이블의 특정 컬럼 값 중 하나여야 한다는 제약이다.
+
+```text
+space_members.space_id -> spaces.id
+```
+
+이 관계가 있으면 DB는 `space_members.space_id` 값을 따라 `spaces.id`와 연결된 row를 찾을 수 있다.
+Supabase/PostgREST는 이 foreign key 관계를 알고 있기 때문에 nested select를 지원한다.
+
+```ts
+supabase.from('space_members').select(`
+  space_id,
+  spaces (
+    id,
+    name
+  )
+`);
+```
+
+이 코드는 `space_members`에서 시작해서, 각 row의 `space_id`가 가리키는 `spaces` row의 `id`, `name`을 함께 가져온다.
+
+다만 화면이 원하는 데이터가 space 목록이라면 `spaces`에서 시작하는 쿼리가 더 읽기 좋을 수 있다.
+
+```ts
+supabase
+  .from('spaces')
+  .select(
+    `
+    id,
+    name,
+    space_members!inner (
+      user_id
+    )
+  `,
+  )
+  .eq('space_members.user_id', userId);
+```
+
+이 쿼리는 `spaces`를 가져오되, `space_members`에 현재 user가 연결된 row만 남긴다.
+
+## 27. RLS는 앱 쿼리 아래에 깔리는 강제 보안 조건이다
+
+클라이언트 쿼리의 `.eq(...)` 조건은 원하는 데이터를 좁히는 필터다.
+하지만 사용자가 클라이언트 코드를 조작할 수 있으므로, 보안은 RLS policy가 강제해야 한다.
+
+```ts
+supabase
+  .from('space_members')
+  .select(...)
+  .eq('user_id', user.id);
+```
+
+위 조건은 "내 membership만 조회하고 싶다"는 앱의 의도다.
+RLS는 이 요청에 추가로 "이 row를 현재 사용자가 볼 수 있는가?"를 판단한다.
+
+현재 `space_members` select policy는 아래 의미에 가깝다.
+
+```text
+현재 사용자가 이 row의 space_id에 속한 멤버라면 볼 수 있다.
+```
+
+그래서 내가 `space-1`의 멤버라면 `space-1`에 속한 다른 멤버십 row도 볼 수 있다.
+이는 나중에 멤버 목록을 보여주기 위한 의도적인 권한 모델이다.
+
+```text
+자기 row만 조회 가능
+= auth.uid() = user_id
+
+내가 속한 space의 멤버십 row 조회 가능
+= is_space_member(space_id, auth.uid())
+```
+
+공동 TODO 앱에서는 같은 space의 멤버 목록을 보여줘야 하므로 후자의 모델이 자연스럽다.
+
+## 28. Supabase generated types와 제네릭
+
+Supabase CLI로 생성한 `Database` 타입은 현재 DB의 테이블, 컬럼, 관계 정보를 TypeScript 타입으로 담고 있다.
+
+```ts
+import type { Database } from './database.types';
+
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, ...);
+```
+
+`<Database>`는 제네릭 인자다.
+제네릭은 값이 아니라 타입을 인자로 넣어서 함수나 타입을 구체화하는 문법이다.
+
+```ts
+Array<string>;
+Promise<User>;
+createClient<Database>;
+```
+
+`createClient<Database>()`는 Supabase client에게 "이 client는 이 DB 구조를 기준으로 동작한다"는 타입 정보를 준다.
+그래서 `supabase.from('spaces')` 같은 쿼리에서 테이블과 컬럼 타입을 추론할 수 있다.
+
+`QueryData`는 `@supabase/supabase-js`가 제공하는 유틸리티 타입이다.
+CLI가 생성한 타입이 아니라, 특정 Supabase query가 성공했을 때의 `data` 타입을 추출하는 도구다.
+
+```ts
+const spacesQuery = supabase.from('spaces').select('id, name');
+
+type SpacesQueryData = QueryData<typeof spacesQuery>;
+```
+
+여기서 `typeof spacesQuery`는 `spacesQuery` 변수의 TypeScript 타입을 가져온다.
+`QueryData<typeof spacesQuery>`는 이 쿼리를 실행했을 때 예상되는 `data` 타입을 계산한다.
+
+중요한 구분:
+
+```text
+Database
+= 우리 DB 스키마 타입. Supabase CLI가 생성한다.
+
+QueryData
+= 특정 query의 data 타입을 뽑는 유틸리티 타입. supabase-js가 제공한다.
+```
+
+## 29. 화면에서는 Supabase 쿼리를 직접 다루기보다 내부 API 함수로 감싼다
+
+Supabase client를 직접 쓰면 프론트 코드가 테이블, foreign key, nested select, RLS를 더 많이 의식하게 된다.
+전통적인 백엔드 API가 있으면 이런 관계형 DB 조회와 응답 가공은 보통 백엔드가 맡는다.
+
+Supabase direct client 방식에서는 앱 안에 작은 API 레이어를 두면 화면 코드가 훨씬 단순해진다.
+
+```text
+select-space.tsx
+= 화면 상태와 렌더링
+
+lib/spaces.ts
+= Supabase 쿼리와 응답 정리
+```
+
+예를 들어 화면에서는 아래처럼 사용한다.
+
+```ts
+const spaces = await getMySpaces(user.id);
+```
+
+그리고 `lib/spaces.ts` 안에서 실제 DB 쿼리와 응답 변환을 처리한다.
+
+```ts
+export async function getMySpaces(userId: string): Promise<MySpace[]> {
+  const result = await mySpacesQuery(userId);
+
+  if (result.error) {
+    throw result.error;
+  }
+
+  return (result.data ?? []).map((space) => ({
+    id: space.id,
+    name: space.name,
+  }));
+}
+```
+
+이렇게 하면 화면은 `getMySpaces`라는 프론트용 인터페이스만 알면 된다.
+나중에 내부 구현이 Supabase query에서 Edge Function이나 별도 API 호출로 바뀌어도 화면 코드는 크게 흔들리지 않는다.

@@ -218,16 +218,17 @@ homeTodo/
 
 목표: Space 공유와 TODO 관리를 위한 기본 테이블을 만든다.
 
-- [ ] `profiles` 테이블 생성
-- [ ] `spaces` 테이블 생성
-- [ ] `space_members` 테이블 생성
-- [ ] `space_invites` 테이블 생성
-- [ ] `chores` 테이블 생성
-- [ ] `chore_completions` 테이블 생성
-- [ ] foreign key 관계 설정
-- [ ] 기본 index 후보 검토
-- [ ] 기획서의 데이터 모델과 실제 SQL 비교
-- [ ] 차이가 있으면 기획서와 이 문서 함께 수정
+- [x] `profiles` 테이블 생성
+- [x] `spaces` 테이블 생성
+- [x] `space_members` 테이블 생성
+- [x] `space_invites` 테이블 생성
+- [x] `chores` 테이블 생성
+- [x] `chore_completions` 테이블 생성
+- [x] `chore_completion_events` 테이블 생성
+- [x] foreign key 관계 설정
+- [x] 기본 index 후보 검토
+- [x] 기획서의 데이터 모델과 실제 SQL 비교
+- [x] 차이가 있으면 기획서와 이 문서 함께 수정
 
 확인 기준:
 
@@ -238,14 +239,15 @@ homeTodo/
 
 목표: Space 멤버십 기준으로 데이터 접근을 제한한다.
 
-- [ ] 각 테이블 RLS 활성화
-- [ ] Space 멤버만 Space 데이터 조회 가능하게 설정
-- [ ] Space 멤버만 Chore 조회 가능하게 설정
-- [ ] Space 멤버가 Chore 생성/수정/삭제 가능하게 설정
-- [ ] Space 멤버가 Completion 생성 가능하게 설정
-- [ ] 초대 코드 조회/사용 정책 설계
+- [x] 각 테이블 RLS 활성화
+- [x] Space 멤버만 Space 데이터 조회 가능하게 설정
+- [x] Space 멤버만 Chore 조회 가능하게 설정
+- [x] Space 멤버가 Chore 생성/수정/삭제 가능하게 설정
+- [x] Space 멤버가 Completion 생성/삭제 가능하게 설정
+- [x] 완료/완료 취소 이벤트 로그 생성/조회 정책 설정
+- [~] 초대 코드 조회/사용 정책 설계
 - [ ] 테스트 계정별 접근 가능/불가능 케이스 확인
-- [ ] RLS 정책과 기획서 권한 모델 비교
+- [x] RLS 정책과 기획서 권한 모델 비교
 
 확인 기준:
 
