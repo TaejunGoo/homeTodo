@@ -1057,3 +1057,85 @@ homeTodo.currentSpaceId.{userId}
 
 실제 권한은 이 값이 아니라 Supabase RLS가 결정한다.
 또한 앱의 `selectSpace`는 현재 유저의 `spaces` 목록에 없는 Space id를 거부하므로, 로컬 저장값이 오래되었거나 조작되어도 현재 사용자 권한 밖 Space가 선택되지 않는다.
+
+## 37. 신규 사용자에게 기본 Space를 만들어두면 첫 흐름이 단순해진다
+
+처음 로그인한 사용자가 Space를 하나도 가지고 있지 않으면 홈 화면에서 무엇을 해야 하는지 애매해진다.
+그래서 Auth 사용자 생성 trigger에서 `profiles` row를 만든 뒤 기본 Space와 `space_members` row까지 함께 만들도록 바꿨다.
+
+```text
+auth.users insert
+-> public.profiles insert
+-> public.spaces insert ('내 스페이스')
+-> public.space_members insert
+```
+
+기존 사용자 중 Space가 하나도 없는 사용자도 migration에서 한 번 backfill한다.
+이렇게 하면 앱은 "Space가 없으니 먼저 만들어야 함"보다 "기본 Space에서 바로 TODO를 만들 수 있음" 흐름으로 시작한다.
+추가 Space 생성은 홈 상단 버튼보다 Space 선택 화면의 보조 액션으로 두는 편이 목적이 명확하다.
+
+## 38. 같은 Space 멤버의 profile 조회에는 별도 RLS가 필요하다
+
+멤버 목록은 `space_members`만 읽으면 user id만 알 수 있고, 화면에 보여줄 이름은 `profiles.display_name`에 있다.
+그래서 Supabase nested select로 `space_members -> profiles` 관계를 따라간다.
+
+```ts
+supabase.from('space_members').select(`
+  id,
+  user_id,
+  joined_at,
+  profiles (
+    id,
+    display_name
+  )
+`);
+```
+
+하지만 `profiles` select policy가 "내 profile만 조회"라면 다른 멤버의 이름은 볼 수 없다.
+이를 위해 "나와 같은 Space를 공유하는 사용자 profile은 볼 수 있다"는 좁은 policy를 추가했다.
+이때도 수정 권한은 여전히 자기 profile에만 허용한다.
+
+## 39. TextInput submitBehavior가 blurOnSubmit을 대체한다
+
+React Native의 `blurOnSubmit`은 deprecated 되었고, 최신 방식은 `submitBehavior`다.
+
+로그인 화면에서는 이메일 입력과 비밀번호 입력의 목적이 다르다.
+
+```tsx
+<TextInput
+  returnKeyType="next"
+  submitBehavior="submit"
+  onSubmitEditing={() => passwordInputRef.current?.focus()}
+/>
+
+<TextInput
+  returnKeyType="done"
+  submitBehavior="blurAndSubmit"
+  onSubmitEditing={handleLogin}
+/>
+```
+
+이메일 입력은 submit 이벤트만 발생시키고 바로 다음 입력으로 포커스를 넘긴다.
+비밀번호 입력은 마지막 입력이므로 Done/Enter에서 submit 후 포커스를 해제해도 자연스럽다.
+
+## 40. 짧은 복사/저장 피드백은 Snackbar 후보가 된다
+
+초대 코드 생성 후에는 `expo-clipboard`의 `setStringAsync`로 자동 복사하고, 코드 카드를 누르면 다시 복사하도록 만들었다.
+
+```ts
+await Clipboard.setStringAsync(invite.code);
+```
+
+현재는 설정 화면 안에서 `초대 코드를 복사했어요.` 같은 문구를 직접 표시한다.
+하지만 저장, 복사, 삭제처럼 짧게 사라지는 피드백이 여러 화면에 늘어나면 공용 Snackbar를 만드는 편이 낫다.
+
+```text
+초기 단계
+= 각 화면 안에서 간단한 메시지 상태로 처리
+
+여러 화면에서 반복되기 시작
+= SnackbarProvider/useSnackbar 같은 전역 피드백으로 분리
+```
+
+`settings.tsx`도 기능이 늘어나면서 화면 파일이 비대해졌기 때문에 `components/settings/*` 섹션 컴포넌트로 나눴다.
+화면 파일은 어떤 섹션을 어떤 순서로 배치할지와, 섹션 사이 coordination만 갖는 편이 읽기 쉽다.

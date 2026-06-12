@@ -1,4 +1,5 @@
 import { ChoreListItem } from '@/components/chore-list-item';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useSpace } from '@/contexts/space-context';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -49,16 +50,10 @@ export default function HomeScreen() {
             style={({ pressed }) => [styles.spaceSelector, pressed && styles.spaceSelectorPressed]}
           >
             <Text style={styles.spaceLabel}>현재 스페이스</Text>
-            <Text style={styles.spaceName}>{currentSpace?.name ?? '스페이스 없음'}</Text>
-          </Pressable>
-
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="스페이스 만들기"
-            hitSlop={8}
-            style={({ pressed }) => [styles.headerButton, pressed && styles.headerButtonPressed]}
-          >
-            <Text style={styles.headerButtonText}>+</Text>
+            <View style={styles.spaceNameRow}>
+              <Text style={styles.spaceName}>{currentSpace?.name ?? '스페이스 없음'}</Text>
+              <IconSymbol name="chevron.down" size={24} color="#77776B" />
+            </View>
           </Pressable>
         </View>
 
@@ -120,7 +115,6 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     marginBottom: 24,
   },
   spaceSelector: {
@@ -128,6 +122,11 @@ const styles = StyleSheet.create({
   },
   spaceSelectorPressed: {
     opacity: 0.72,
+  },
+  spaceNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   spaceLabel: {
     fontSize: 13,
@@ -138,23 +137,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '700',
     color: '#1F2520',
-  },
-  headerButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#1F2520',
-  },
-  headerButtonPressed: {
-    opacity: 0.72,
-    transform: [{ scale: 0.96 }],
-  },
-  headerButtonText: {
-    fontSize: 24,
-    color: '#FFFFFF',
-    lineHeight: 24,
+    flexShrink: 1,
   },
   summary: {
     marginBottom: 20,

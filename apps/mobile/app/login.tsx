@@ -1,10 +1,11 @@
 import { supabase } from '@/lib/supabase';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function LoginScreen() {
+  const passwordInputRef = useRef<TextInput>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -13,6 +14,10 @@ export default function LoginScreen() {
   const isLoginDisabled = email.trim().length === 0 || password.length === 0 || isSubmitting;
 
   async function handleLogin() {
+    if (isLoginDisabled) {
+      return;
+    }
+
     const trimmedEmail = email.trim();
 
     setErrorMsg('');
@@ -52,7 +57,8 @@ export default function LoginScreen() {
             <TextInput
               style={styles.input}
               value={email}
-              onChangeText={setEmail}
+              submitBehavior="submit"
+              returnKeyType="next"
               placeholder="test@example.com"
               placeholderTextColor="#99998E"
               autoCapitalize="none"
@@ -60,12 +66,15 @@ export default function LoginScreen() {
               autoComplete="email"
               keyboardType="email-address"
               textContentType="emailAddress"
+              onChangeText={setEmail}
+              onSubmitEditing={() => passwordInputRef.current?.focus()}
             />
           </View>
 
           <View style={styles.field}>
             <Text style={styles.label}>비밀번호</Text>
             <TextInput
+              ref={passwordInputRef}
               style={styles.input}
               value={password}
               onChangeText={setPassword}
@@ -75,6 +84,8 @@ export default function LoginScreen() {
               textContentType="password"
               autoComplete="password"
               returnKeyType="done"
+              submitBehavior="blurAndSubmit"
+              onSubmitEditing={handleLogin}
             />
           </View>
 

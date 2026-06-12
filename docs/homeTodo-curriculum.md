@@ -258,15 +258,16 @@ homeTodo/
 
 목표: 앱에서 Space를 만들고 선택하고 공유할 수 있게 한다.
 
-- [ ] 내 Space 목록 조회
-- [ ] Space 생성
-- [ ] Space 생성 시 만든 사용자를 `space_members`에 추가
-- [ ] Space 선택 상태 관리
+- [x] 내 Space 목록 조회
+- [x] 신규 사용자 기본 Space 자동 생성
+- [x] Space 생성
+- [x] Space 생성 시 만든 사용자를 `space_members`에 추가
+- [x] Space 선택 상태 관리
 - [x] 초대 코드 생성
-- [~] 초대 코드 입력
-- [~] 초대 코드 유효성 확인
-- [ ] 유효한 코드로 Space 참여
-- [ ] 멤버 목록 조회
+- [x] 초대 코드 입력
+- [x] 초대 코드 유효성 확인
+- [x] 유효한 코드로 Space 참여
+- [x] 멤버 목록 조회
 
 확인 기준:
 
@@ -370,15 +371,11 @@ homeTodo/
 
 ## 5. 현재 다음 단계
 
-다음에 진행할 단계는 Phase 1의 Figma 와이어프레임이다.
+다음에 진행할 단계는 Phase 10의 Chore CRUD다.
 
-우선 Figma에서 아래 화면 8개를 저해상도 와이어프레임으로 그린다.
+우선 현재 선택된 Space 기준으로 반복 집안일을 생성하고 조회하는 흐름부터 구현한다.
 
-- 로그인
-- Space 선택
-- 초대 코드 입력
-- 오늘
-- 전체 TODO
-- TODO 생성/수정
-- 완료 이력
-- Space 설정
+- Chore 목록 조회
+- Chore 생성
+- 반복 타입 선택
+- `daily`, `weekly`, `monthly`, `interval_days` 입력 처리
