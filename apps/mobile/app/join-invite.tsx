@@ -1,22 +1,38 @@
 import { ScreenHeading } from '@/components/screen-heading';
+import { useSpace } from '@/contexts/space-context';
+import { joinSpaceWithInviteCode } from '@/lib/invites';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function JoinInviteScreen() {
+  const { refreshSpaces, selectSpace } = useSpace();
   const [inviteCode, setInviteCode] = useState('');
   const [message, setMessage] = useState('');
+  const [isJoining, setIsJoining] = useState(false);
 
   const normalizedCode = inviteCode.trim().toUpperCase();
-  const isJoinDisabled = normalizedCode.length === 0;
+  const isJoinDisabled = normalizedCode.length === 0 || isJoining;
 
-  function handleJoin() {
-    if (normalizedCode === 'A8K2QZ') {
-      setMessage('스페이스에 참여했어요.');
+  async function handleJoin() {
+    if (isJoinDisabled) {
       return;
     }
 
-    setMessage('유효하지 않거나 만료된 코드예요.');
+    setMessage('');
+    setIsJoining(true);
+
+    try {
+      const joinedSpace = await joinSpaceWithInviteCode(normalizedCode);
+      await refreshSpaces();
+      selectSpace(joinedSpace.id);
+      router.back();
+    } catch {
+      setMessage('유효하지 않거나 만료된 코드예요.');
+    } finally {
+      setIsJoining(false);
+    }
   }
 
   return (
@@ -35,15 +51,20 @@ export default function JoinInviteScreen() {
               style={styles.input}
               value={inviteCode}
               onChangeText={setInviteCode}
-              placeholder="예: A8K2QZ"
+              placeholder="예: A8K2QZ9M"
               placeholderTextColor="#99998E"
               autoCapitalize="characters"
               autoCorrect={false}
               returnKeyType="done"
+              onSubmitEditing={handleJoin}
             />
           </View>
 
-          {message.length > 0 && <Text style={styles.message}>{message}</Text>}
+          {message.length > 0 && (
+            <Text accessibilityRole="alert" style={styles.message}>
+              {message}
+            </Text>
+          )}
         </View>
 
         <Pressable
@@ -58,7 +79,7 @@ export default function JoinInviteScreen() {
             pressed && !isJoinDisabled && styles.primaryButtonPressed,
           ]}
         >
-          <Text style={styles.primaryButtonText}>참여</Text>
+          <Text style={styles.primaryButtonText}>{isJoining ? '참여 중...' : '참여'}</Text>
         </Pressable>
       </View>
     </SafeAreaView>

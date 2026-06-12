@@ -18,13 +18,11 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <AuthGate>
         <SpaceProvider>
-          <Stack>
-            <Stack.Screen name="login" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="create-todo" options={{ headerShown: false }} />
-            <Stack.Screen name="select-space" options={{ headerShown: false }} />
-            <Stack.Screen name="join-invite" options={{ headerShown: false }} />
-            <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen
+              name="modal"
+              options={{ headerShown: true, presentation: 'modal', title: 'Modal' }}
+            />
           </Stack>
         </SpaceProvider>
       </AuthGate>

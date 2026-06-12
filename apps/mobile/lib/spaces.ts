@@ -37,3 +37,18 @@ export async function getMySpaces(userId: string): Promise<MySpace[]> {
     name: space.name,
   }));
 }
+
+export async function createSpace(name: string): Promise<MySpace> {
+  const result = await supabase.rpc('create_space', { space_name: name }).single();
+
+  if (result.error) {
+    throw result.error;
+  }
+
+  const space = result.data;
+
+  return {
+    id: space.id,
+    name: space.name,
+  };
+}

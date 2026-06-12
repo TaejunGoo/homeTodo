@@ -781,3 +781,279 @@ export async function getMySpaces(userId: string): Promise<MySpace[]> {
 
 이렇게 하면 화면은 `getMySpaces`라는 프론트용 인터페이스만 알면 된다.
 나중에 내부 구현이 Supabase query에서 Edge Function이나 별도 API 호출로 바뀌어도 화면 코드는 크게 흔들리지 않는다.
+
+## 30. Expo Router에서 파일은 route, Stack.Screen은 옵션 선언에 가깝다
+
+Expo Router는 파일 기반 라우팅을 사용한다.
+`app/create-space.tsx` 파일을 만들면 `/create-space` route가 자동으로 생긴다.
+따라서 화면 이동을 위해 모든 route를 `_layout.tsx`의 `Stack.Screen`에 반드시 명시할 필요는 없다.
+
+```text
+app/create-space.tsx
+-> /create-space
+```
+
+`Stack.Screen`은 route를 만드는 역할보다 해당 route의 navigation 옵션을 선언하는 역할에 가깝다.
+
+```tsx
+<Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+```
+
+모든 Stack 화면에 공통 옵션을 주고 싶으면 `Stack`의 `screenOptions`를 사용한다.
+
+```tsx
+<Stack screenOptions={{ headerShown: false }}>
+  <Stack.Screen
+    name="modal"
+    options={{ headerShown: true, presentation: 'modal', title: 'Modal' }}
+  />
+</Stack>
+```
+
+이 구조에서는 대부분 화면의 기본 header가 꺼지고, `modal`처럼 예외 옵션이 필요한 route만 `Stack.Screen`으로 남긴다.
+
+정리:
+
+```text
+route 생성
+= app 폴더의 파일이 담당
+
+route 옵션 설정
+= Stack.Screen이 담당
+
+공통 옵션
+= Stack screenOptions로 설정
+```
+
+## 31. 단순 CRUD는 REST, 여러 테이블 정합성은 RPC가 어울린다
+
+Supabase client의 기본 사용 방식은 테이블을 대상으로 한 REST/PostgREST 요청이다.
+단일 테이블을 조회, 생성, 수정, 삭제하는 일반적인 CRUD는 이 방식이 자연스럽다.
+
+```ts
+supabase.from('chores').select('*');
+supabase.from('chores').insert(...);
+supabase.from('chores').update(...);
+```
+
+하지만 하나의 사용자 행동이 여러 테이블을 반드시 함께 바꿔야 한다면 REST 요청을 여러 번 나누는 것이 위험할 수 있다.
+예를 들어 Space 생성은 앱 입장에서는 하나의 행동이지만 DB에는 두 row가 함께 생겨야 한다.
+
+```text
+spaces row 생성
+space_members row 생성
+```
+
+앱에서 REST 요청을 두 번 보내면 아래 같은 중간 실패 상태가 생길 수 있다.
+
+```text
+spaces insert 성공
+space_members insert 실패
+-> 멤버 없는 Space가 남음
+```
+
+이런 정합성 문제를 줄이기 위해 `create_space` RPC를 사용했다.
+앱은 함수 하나만 호출하고, DB 함수 안에서 두 작업을 함께 처리한다.
+
+```ts
+const result = await supabase.rpc('create_space', {
+  space_name: name,
+});
+```
+
+DB 함수는 대략 아래 책임을 가진다.
+
+```text
+현재 로그인 사용자 확인: auth.uid()
+입력값 정리: btrim(space_name)
+빈 이름 차단
+spaces insert
+space_members insert
+생성된 Space 반환
+```
+
+현재 MVP 기준의 `create_space` 함수는 적절한 편이다.
+특히 앱에서 user id를 직접 넘기지 않고 DB 안에서 `auth.uid()`를 사용하므로, 클라이언트가 다른 사용자의 id를 넣는 문제를 줄인다.
+또한 `spaces`와 `space_members` 생성을 하나의 서버 측 함수로 묶어, 두 요청 사이에서 생길 수 있는 중간 상태를 피한다.
+
+다만 RPC를 모든 CRUD에 남발할 필요는 없다.
+기준은 아래처럼 잡는다.
+
+```text
+REST가 어울리는 경우
+= 단일 테이블 CRUD, 단순 조회, RLS만으로 충분한 작업
+
+RPC가 어울리는 경우
+= 여러 테이블을 함께 변경해야 하는 작업
+= 중간 상태가 생기면 안 되는 작업
+= 초대 코드 검증처럼 클라이언트에 세부 로직을 노출하고 싶지 않은 작업
+= 완료 처리와 이벤트 로그 생성처럼 한 행동이 여러 기록을 남기는 작업
+```
+
+우리 앱에서 RPC 후보:
+
+```text
+create_space
+create_invite_code
+join_space_with_invite_code
+complete_chore
+uncomplete_chore
+```
+
+반면 Chore 목록 조회나 단순 Chore 수정 같은 기능은 REST 방식이 더 단순하고 자연스럽다.
+
+## 32. 초대 코드 생성은 DB 함수에 맡긴다
+
+Space 초대 코드는 클라이언트에서 직접 만들기보다 DB 함수에서 만드는 편이 낫다.
+
+이유는 세 가지다.
+
+```text
+1. 현재 로그인한 사용자가 해당 Space 멤버인지 DB에서 확인할 수 있다.
+2. code 컬럼의 unique 제약과 함께 중복 코드를 피할 수 있다.
+3. 만료 시간, 최대 사용 횟수 같은 규칙을 한 곳에 모을 수 있다.
+```
+
+현재 MVP에서는 `create_invite_code` RPC가 초대 코드를 만든다.
+
+```text
+입력: target_space_id
+검증: auth.uid()가 있고, 해당 사용자가 Space 멤버인지 확인
+생성: 8자리 초대 코드
+만료: 생성 시점부터 1일
+사용 제한: 최대 5회
+반환: id, code, expires_at, max_uses, used_count
+```
+
+앱에서는 설정 화면의 "초대 코드 만들기" 버튼을 눌렀을 때 이 RPC를 호출하고, 성공하면 받은 코드를 화면에 표시한다.
+
+중요한 점은 `packages/supabase/migrations`에 파일이 있다고 해서 원격 Supabase DB에 자동 적용되는 것은 아니라는 점이다.
+지금처럼 SQL Editor를 수동으로 쓰는 단계에서는, migration 파일은 "우리가 실행한 DB 변경 기록의 백업본"에 가깝다.
+실제 앱에서 동작하려면 Supabase SQL Editor에서 같은 SQL을 실행해야 한다.
+
+## 33. 초대 코드 참여는 Security Definer RPC가 필요하다
+
+초대 코드 생성은 이미 Space 멤버인 사용자가 하는 일이다.
+반면 초대 코드 참여는 아직 Space 멤버가 아닌 사용자가 하는 일이다.
+
+이 차이 때문에 참여 흐름은 일반 REST insert로 처리하기 어렵다.
+
+```text
+참여 전 사용자
+= 아직 target Space의 멤버가 아님
+= space_invites를 직접 읽게 열어두면 아무 코드나 조회하는 길이 생길 수 있음
+= space_members에 직접 insert 권한을 넓게 주면 원하지 않는 Space 가입 위험이 생김
+```
+
+그래서 `join_space_with_invite_code` RPC를 둔다.
+이 함수는 초대 코드 문자열 하나만 입력받고, DB 안에서 아래 순서로 처리한다.
+
+```text
+1. auth.uid()로 현재 사용자 확인
+2. 초대 코드 정규화: trim + uppercase
+3. 코드 존재 여부 확인
+4. 만료 여부 확인
+5. 최대 사용 횟수 확인
+6. 이미 멤버라면 그대로 Space 반환
+7. used_count 증가
+8. space_members에 현재 사용자 추가
+9. 가입한 Space의 id, name 반환
+```
+
+여기서 `security definer`는 "함수를 만든 DB 역할의 권한으로 함수 본문을 실행한다"는 뜻이다.
+위험한 옵션이지만, 함수 내부에서 입력값과 권한을 직접 검증하면 좁은 문처럼 사용할 수 있다.
+
+핵심은 테이블 권한을 넓게 열지 않고, "초대 코드로 참여"라는 하나의 안전한 통로만 열어두는 것이다.
+
+## 34. Auth 사용자와 profiles row는 자동으로 같은 것이 아니다
+
+Supabase Auth에 사용자가 생겼다고 해서 `public.profiles` row가 자동으로 생기는 것은 아니다.
+우리가 직접 만들거나, DB trigger로 자동 생성해야 한다.
+
+우리 DB는 여러 테이블이 `profiles.id`를 참조한다.
+
+```text
+spaces.created_by -> profiles.id
+space_members.user_id -> profiles.id
+space_invites.created_by -> profiles.id
+```
+
+그래서 Auth에는 `hyejin` 계정이 있어도 `public.profiles`에 해당 id가 없으면, 초대 코드 참여 중 `space_members` insert가 실패한다.
+이때 PostgREST/Supabase 응답이 `409 Conflict`로 보일 수 있다.
+
+해결은 두 가지다.
+
+```text
+1. 기존 auth.users 중 profiles가 없는 사용자를 backfill한다.
+2. 앞으로 생성되는 auth.users는 trigger로 profiles row를 자동 생성한다.
+```
+
+이를 위해 `create_profiles_for_auth_users` migration을 추가했다.
+이 SQL을 원격 Supabase SQL Editor에서 한 번 실행하면 기존 테스트 계정도 profiles에 채워지고, 이후 새 계정도 자동으로 profile이 만들어진다.
+
+## 35. 앱 전역 상태는 로그인 사용자 변경을 기준으로 초기화해야 한다
+
+`SpaceProvider`처럼 앱 전체에서 오래 살아 있는 context는 로그인/로그아웃 후에도 메모리에 남아 있을 수 있다.
+따라서 사용자별 데이터는 Auth 상태 변화에 맞춰 비우거나 다시 불러와야 한다.
+
+이번에 생긴 문제는 아래 흐름이었다.
+
+```text
+taejun 로그인
+테스트 Space 선택
+로그아웃
+hyejin 로그인
+SpaceProvider 메모리에는 여전히 taejun의 spaces/currentSpaceId가 남아 있음
+```
+
+해결은 두 가지였다.
+
+```text
+1. supabase.auth.onAuthStateChange를 SpaceProvider에서도 구독한다.
+2. 선택된 Space 저장 키를 user id별로 분리한다.
+```
+
+예를 들어 전에는 아래처럼 모든 사용자가 같은 키를 공유했다.
+
+```text
+homeTodo.currentSpaceId
+```
+
+이제는 사용자별로 나뉜다.
+
+```text
+homeTodo.currentSpaceId.{userId}
+```
+
+또한 `selectSpace`는 현재 `spaces` 목록에 실제로 존재하는 Space id만 선택하도록 막았다.
+이렇게 해야 오래된 화면 상태나 잘못된 호출이 있어도, 현재 사용자 권한 밖의 Space를 앱 상태로 선택하지 않는다.
+
+## 36. AsyncStorage에는 UX용 캐시만 저장한다
+
+`AsyncStorage`는 앱 로컬에 값을 저장하는 간단한 key-value storage다.
+다만 암호화 저장소라고 보면 안 된다.
+
+그래서 아래 값은 저장하지 않는 편이 좋다.
+
+```text
+비밀번호
+민감한 개인정보
+초대 코드
+권한을 증명하는 자체 토큰
+보안상 노출되면 곤란한 값
+```
+
+반면 아래처럼 노출되어도 실제 권한을 주지 않는 preference cache는 저장해도 괜찮다.
+
+```text
+마지막으로 선택한 Space id
+마지막으로 선택한 탭
+사용자 UI 설정
+온보딩 확인 여부
+```
+
+우리 앱은 `homeTodo.currentSpaceId.{userId}` 형태로 각 사용자별 마지막 선택 Space id를 저장한다.
+이 값은 단지 "다시 로그인했을 때 어떤 Space를 먼저 보여줄지"를 정하는 힌트다.
+
+실제 권한은 이 값이 아니라 Supabase RLS가 결정한다.
+또한 앱의 `selectSpace`는 현재 유저의 `spaces` 목록에 없는 Space id를 거부하므로, 로컬 저장값이 오래되었거나 조작되어도 현재 사용자 권한 밖 Space가 선택되지 않는다.

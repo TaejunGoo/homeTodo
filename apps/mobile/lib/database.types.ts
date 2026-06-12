@@ -314,9 +314,33 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      create_invite_code: {
+        Args: { target_space_id: string };
+        Returns: {
+          code: string;
+          expires_at: string | null;
+          id: string;
+          max_uses: number | null;
+          used_count: number;
+        }[];
+      };
+      create_space: {
+        Args: { space_name: string };
+        Returns: {
+          id: string;
+          name: string;
+        }[];
+      };
       is_space_member: {
         Args: { target_space_id: string; target_user_id: string };
         Returns: boolean;
+      };
+      join_space_with_invite_code: {
+        Args: { invite_code: string };
+        Returns: {
+          id: string;
+          name: string;
+        }[];
       };
     };
     Enums: {

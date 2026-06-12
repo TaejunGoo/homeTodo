@@ -1,11 +1,21 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getMySpaces, type MySpace } from '@/lib/spaces';
 import { supabase } from '@/lib/supabase';
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import type { User } from '@supabase/supabase-js';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 
-const CURRENT_SPACE_ID_STORAGE_KEY = 'homeTodo.currentSpaceId';
+const CURRENT_SPACE_ID_STORAGE_KEY_PREFIX = 'homeTodo.currentSpaceId';
 
 interface SpaceContextValue {
+  currentUserEmail: string;
   spaces: MySpace[];
   currentSpace: MySpace | null;
   currentSpaceId: string | null;
@@ -22,28 +32,31 @@ interface SpaceProviderProps {
 }
 
 export function SpaceProvider({ children }: SpaceProviderProps) {
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserEmail, setCurrentUserEmail] = useState('');
   const [spaces, setSpaces] = useState<MySpace[]>([]);
   const [currentSpaceId, setCurrentSpaceId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
 
-  async function refreshSpaces() {
+  const clearSpaceState = useCallback(() => {
+    setCurrentUserId(null);
+    setCurrentUserEmail('');
+    setSpaces([]);
+    setCurrentSpaceId(null);
+    setErrorMessage('');
+    setIsLoading(false);
+  }, []);
+
+  const refreshSpacesForUser = useCallback(async (user: User) => {
     setIsLoading(true);
     setErrorMessage('');
-
-    const userResult = await supabase.auth.getUser();
-
-    if (userResult.error || !userResult.data.user) {
-      setSpaces([]);
-      setCurrentSpaceId(null);
-      setErrorMessage('로그인 정보를 확인하지 못했어요.');
-      setIsLoading(false);
-      return;
-    }
+    setCurrentUserId(user.id);
+    setCurrentUserEmail(user.email ?? '');
 
     try {
-      const nextSpaces = await getMySpaces(userResult.data.user.id);
-      const storedSpaceId = await AsyncStorage.getItem(CURRENT_SPACE_ID_STORAGE_KEY);
+      const nextSpaces = await getMySpaces(user.id);
+      const storedSpaceId = await AsyncStorage.getItem(getCurrentSpaceIdStorageKey(user.id));
 
       setSpaces(nextSpaces);
 
@@ -65,24 +78,65 @@ export function SpaceProvider({ children }: SpaceProviderProps) {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, []);
+
+  const refreshSpaces = useCallback(async () => {
+    setIsLoading(true);
+    setErrorMessage('');
+
+    const userResult = await supabase.auth.getUser();
+
+    if (userResult.error || !userResult.data.user) {
+      clearSpaceState();
+      return;
+    }
+
+    await refreshSpacesForUser(userResult.data.user);
+  }, [clearSpaceState, refreshSpacesForUser]);
 
   useEffect(() => {
     refreshSpaces();
-  }, []);
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user;
+
+      if (!user) {
+        clearSpaceState();
+        return;
+      }
+
+      refreshSpacesForUser(user);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [clearSpaceState, refreshSpaces, refreshSpacesForUser]);
 
   const currentSpace = spaces.find((space) => space.id === currentSpaceId) ?? null;
 
-  function selectSpace(spaceId: string) {
-    setCurrentSpaceId(spaceId);
+  const selectSpace = useCallback(
+    (spaceId: string) => {
+      const canSelectSpace = spaces.some((space) => space.id === spaceId);
 
-    // This is a user preference cache. The in-memory state should update even if
-    // persisting the last selected space fails.
-    AsyncStorage.setItem(CURRENT_SPACE_ID_STORAGE_KEY, spaceId).catch(() => {});
-  }
+      if (!currentUserId || !canSelectSpace) {
+        return;
+      }
+
+      setCurrentSpaceId(spaceId);
+
+      // This is a user preference cache. The in-memory state should update even if
+      // persisting the last selected space fails.
+      AsyncStorage.setItem(getCurrentSpaceIdStorageKey(currentUserId), spaceId).catch(() => {});
+    },
+    [currentUserId, spaces],
+  );
 
   const value = useMemo(
     () => ({
+      currentUserEmail,
       spaces,
       currentSpace,
       currentSpaceId,
@@ -91,7 +145,16 @@ export function SpaceProvider({ children }: SpaceProviderProps) {
       selectSpace,
       refreshSpaces,
     }),
-    [spaces, currentSpace, currentSpaceId, isLoading, errorMessage],
+    [
+      currentUserEmail,
+      spaces,
+      currentSpace,
+      currentSpaceId,
+      isLoading,
+      errorMessage,
+      selectSpace,
+      refreshSpaces,
+    ],
   );
 
   return <SpaceContext.Provider value={value}>{children}</SpaceContext.Provider>;
@@ -105,4 +168,8 @@ export function useSpace() {
   }
 
   return context;
+}
+
+function getCurrentSpaceIdStorageKey(userId: string) {
+  return `${CURRENT_SPACE_ID_STORAGE_KEY_PREFIX}.${userId}`;
 }

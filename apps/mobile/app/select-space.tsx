@@ -86,6 +86,7 @@ export default function SelectSpaceScreen() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="새 스페이스 만들기"
+            onPress={() => router.push('/create-space')}
             style={({ pressed }) => [
               styles.secondaryButton,
               pressed && styles.secondaryButtonPressed,
