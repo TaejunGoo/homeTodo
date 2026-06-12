@@ -245,18 +245,21 @@ export type Database = {
         Row: {
           id: string;
           joined_at: string;
+          role: string;
           space_id: string;
           user_id: string;
         };
         Insert: {
           id?: string;
           joined_at?: string;
+          role?: string;
           space_id: string;
           user_id: string;
         };
         Update: {
           id?: string;
           joined_at?: string;
+          role?: string;
           space_id?: string;
           user_id?: string;
         };
@@ -332,6 +335,10 @@ export type Database = {
         }[];
       };
       is_space_member: {
+        Args: { target_space_id: string; target_user_id: string };
+        Returns: boolean;
+      };
+      is_space_admin: {
         Args: { target_space_id: string; target_user_id: string };
         Returns: boolean;
       };

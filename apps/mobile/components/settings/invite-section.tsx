@@ -1,4 +1,5 @@
 import { createInviteCode, type SpaceInvite } from '@/lib/invites';
+import { canCreateSpaceInvite, type SpaceRole } from '@/lib/spaces';
 import * as Clipboard from 'expo-clipboard';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -6,23 +7,30 @@ import Toast from 'react-native-toast-message';
 
 interface InviteSectionProps {
   currentSpaceId: string | null;
+  currentSpaceRole: SpaceRole | null;
 }
 
-export function InviteSection({ currentSpaceId }: InviteSectionProps) {
+export function InviteSection({ currentSpaceId, currentSpaceRole }: InviteSectionProps) {
   const [invite, setInvite] = useState<SpaceInvite | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [isCreatingInvite, setIsCreatingInvite] = useState(false);
 
-  const isInviteButtonDisabled = !currentSpaceId || isCreatingInvite;
+  const canCreateInvite = canCreateSpaceInvite(currentSpaceRole);
+  const isInviteButtonDisabled = !currentSpaceId || !canCreateInvite || isCreatingInvite;
 
   useEffect(() => {
     setInvite(null);
     setErrorMessage('');
-  }, [currentSpaceId]);
+  }, [currentSpaceId, currentSpaceRole]);
 
   async function handleCreateInviteCode() {
     if (!currentSpaceId) {
       setErrorMessage('먼저 스페이스를 선택해 주세요.');
+      return;
+    }
+
+    if (!canCreateInvite) {
+      setErrorMessage('초대 코드는 소유자 또는 관리자만 만들 수 있어요.');
       return;
     }
 
@@ -69,10 +77,19 @@ export function InviteSection({ currentSpaceId }: InviteSectionProps) {
           pressed && !isInviteButtonDisabled && styles.secondaryButtonPressed,
         ]}
       >
-        <Text style={styles.secondaryButtonText}>
+        <Text
+          style={[
+            styles.secondaryButtonText,
+            isInviteButtonDisabled && styles.secondaryButtonTextDisabled,
+          ]}
+        >
           {isCreatingInvite ? '만드는 중...' : '초대 코드 만들기'}
         </Text>
       </Pressable>
+
+      {currentSpaceId && !canCreateInvite ? (
+        <Text style={styles.helperText}>초대 코드는 소유자 또는 관리자만 만들 수 있어요.</Text>
+      ) : null}
 
       {invite ? (
         <Pressable
@@ -88,6 +105,7 @@ export function InviteSection({ currentSpaceId }: InviteSectionProps) {
           <Text style={styles.copyHintText}>코드를 누르면 다시 복사돼요.</Text>
         </Pressable>
       ) : null}
+
       {errorMessage ? (
         <Text accessibilityRole="alert" style={styles.errorText}>
           {errorMessage}
@@ -133,6 +151,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#2F6F67',
   },
+  secondaryButtonTextDisabled: {
+    color: '#8E8C82',
+  },
   inviteCard: {
     borderRadius: 12,
     borderWidth: 1,
@@ -155,6 +176,11 @@ const styles = StyleSheet.create({
   copyHintText: {
     fontSize: 13,
     color: '#2F6F67',
+  },
+  helperText: {
+    marginTop: 8,
+    fontSize: 13,
+    color: '#77776B',
   },
   errorText: {
     marginTop: 10,

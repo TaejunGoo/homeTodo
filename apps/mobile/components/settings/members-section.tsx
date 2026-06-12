@@ -1,4 +1,4 @@
-import { getSpaceMembers, type SpaceMember } from '@/lib/spaces';
+import { getSpaceMembers, getSpaceRoleLabel, type SpaceMember } from '@/lib/spaces';
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -59,6 +59,7 @@ export function MembersSection({ currentSpaceId, refreshKey }: MembersSectionPro
       {members.map((member) => (
         <View key={member.id} style={styles.memberItem}>
           <Text style={styles.memberName}>{member.displayName}</Text>
+          <Text style={styles.memberRole}>{getSpaceRoleLabel(member.role)}</Text>
         </View>
       ))}
     </View>
@@ -82,12 +83,21 @@ const styles = StyleSheet.create({
     borderColor: '#E4E2DA',
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 14,
-    justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
     marginBottom: 8,
   },
   memberName: {
+    flex: 1,
     fontSize: 16,
     color: '#1F2520',
+  },
+  memberRole: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#2F6F67',
   },
   memberStatusText: {
     fontSize: 14,

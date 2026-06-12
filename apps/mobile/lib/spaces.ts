@@ -10,7 +10,8 @@ const mySpacesQuery = (userId: string) =>
       id,
       name,
       space_members!inner (
-        user_id
+        user_id,
+        role
       )
     `,
     )
@@ -26,6 +27,7 @@ const spaceMembersQuery = (spaceId: string) =>
       id,
       user_id,
       joined_at,
+      role,
       profiles (
         id,
         display_name
@@ -37,9 +39,12 @@ const spaceMembersQuery = (spaceId: string) =>
 
 type SpaceMembersQueryData = QueryData<ReturnType<typeof spaceMembersQuery>>;
 
+export type SpaceRole = 'owner' | 'admin' | 'member';
+
 export interface MySpace {
   id: string;
   name: string;
+  role: SpaceRole;
 }
 
 export interface SpaceMember {
@@ -47,6 +52,7 @@ export interface SpaceMember {
   userId: string;
   displayName: string;
   joinedAt: string;
+  role: SpaceRole;
 }
 
 export async function getMySpaces(userId: string): Promise<MySpace[]> {
@@ -58,10 +64,15 @@ export async function getMySpaces(userId: string): Promise<MySpace[]> {
 
   const rows: MySpacesQueryData = result.data ?? [];
 
-  return rows.map((space) => ({
-    id: space.id,
-    name: space.name,
-  }));
+  return rows.map((space) => {
+    const membership = space.space_members[0];
+
+    return {
+      id: space.id,
+      name: space.name,
+      role: normalizeSpaceRole(membership?.role),
+    };
+  });
 }
 
 export async function createSpace(name: string): Promise<MySpace> {
@@ -76,6 +87,7 @@ export async function createSpace(name: string): Promise<MySpace> {
   return {
     id: space.id,
     name: space.name,
+    role: 'owner',
   };
 }
 
@@ -93,5 +105,29 @@ export async function getSpaceMembers(spaceId: string): Promise<SpaceMember[]> {
     userId: member.user_id,
     displayName: member.profiles?.display_name ?? '이름 없음',
     joinedAt: member.joined_at,
+    role: normalizeSpaceRole(member.role),
   }));
+}
+
+export function getSpaceRoleLabel(role: SpaceRole) {
+  switch (role) {
+    case 'owner':
+      return '소유자';
+    case 'admin':
+      return '관리자';
+    case 'member':
+      return '멤버';
+  }
+}
+
+export function canCreateSpaceInvite(role: SpaceRole | null | undefined) {
+  return role === 'owner' || role === 'admin';
+}
+
+function normalizeSpaceRole(role: string | null | undefined): SpaceRole {
+  if (role === 'owner' || role === 'admin' || role === 'member') {
+    return role;
+  }
+
+  return 'member';
 }

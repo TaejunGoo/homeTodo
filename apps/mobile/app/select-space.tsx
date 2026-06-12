@@ -1,5 +1,6 @@
 import { ScreenHeading } from '@/components/screen-heading';
 import { useSpace } from '@/contexts/space-context';
+import { getSpaceRoleLabel } from '@/lib/spaces';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -9,6 +10,7 @@ export default function SelectSpaceScreen() {
   const { spaces, currentSpaceId, isLoading, errorMessage, selectSpace } = useSpace();
   const [draftSpaceId, setDraftSpaceId] = useState<string | null>(currentSpaceId);
   const isConfirmDisabled = !draftSpaceId;
+
   useEffect(() => {
     setDraftSpaceId(currentSpaceId);
   }, [currentSpaceId]);
@@ -52,12 +54,22 @@ export default function SelectSpaceScreen() {
                   pressed && styles.spaceItemPressed,
                 ]}
               >
-                <View style={styles.spaceTextGroup}>
-                  <Text style={styles.spaceName}>{space.name}</Text>
-                  <Text style={styles.spaceMeta}>참여 중</Text>
+                <View style={styles.checkSlot}>
+                  <Text style={[styles.selectedMark, !isSelected && styles.selectedMarkHidden]}>
+                    ✓
+                  </Text>
                 </View>
 
-                {isSelected ? <Text style={styles.selectedMark}>✓</Text> : null}
+                <View style={styles.spaceTextGroup}>
+                  <Text style={styles.spaceName}>{space.name}</Text>
+                  <Text style={styles.spaceMeta}>{isSelected ? '현재 선택됨' : '참여 중'}</Text>
+                </View>
+
+                <View style={styles.spaceRightGroup}>
+                  <View style={styles.roleBadge}>
+                    <Text style={styles.roleBadgeText}>{getSpaceRoleLabel(space.role)}</Text>
+                  </View>
+                </View>
               </Pressable>
             );
           })}
@@ -161,6 +173,11 @@ const styles = StyleSheet.create({
     opacity: 0.78,
     transform: [{ scale: 0.99 }],
   },
+  checkSlot: {
+    width: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   spaceTextGroup: {
     flex: 1,
     gap: 2,
@@ -174,10 +191,30 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#77776B',
   },
+  spaceRightGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  roleBadge: {
+    borderRadius: 999,
+    backgroundColor: '#E8F0EC',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+  },
+  roleBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#2F6F67',
+  },
   selectedMark: {
     fontSize: 18,
     fontWeight: '700',
     color: '#2F6F67',
+    textAlign: 'center',
+  },
+  selectedMarkHidden: {
+    opacity: 0,
   },
   actions: {
     gap: 10,

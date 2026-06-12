@@ -35,7 +35,10 @@ export default function SettingsScreen() {
       />
       <CurrentSpaceSection currentSpace={currentSpace} />
       <MembersSection currentSpaceId={currentSpaceId} refreshKey={membersRefreshKey} />
-      <InviteSection currentSpaceId={currentSpaceId} />
+      <InviteSection
+        currentSpaceId={currentSpaceId}
+        currentSpaceRole={currentSpace?.role ?? null}
+      />
 
       <Pressable
         accessibilityRole="button"
