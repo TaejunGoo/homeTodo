@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
+import { AppToast } from '@/components/app-toast';
 import AuthGate from '@/components/auth-gate';
 import { SpaceProvider } from '@/contexts/space-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -28,6 +29,7 @@ export default function RootLayout() {
       </AuthGate>
 
       <StatusBar style="auto" />
+      <AppToast />
     </ThemeProvider>
   );
 }

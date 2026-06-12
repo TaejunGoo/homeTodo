@@ -1,6 +1,7 @@
 import { getMyProfile, updateMyDisplayName } from '@/lib/profiles';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 interface DisplayNameSectionProps {
   currentUserEmail: string;
@@ -14,7 +15,6 @@ export function DisplayNameSection({
   const [displayNameInput, setDisplayNameInput] = useState('');
   const [savedDisplayName, setSavedDisplayName] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -32,7 +32,6 @@ export function DisplayNameSection({
     async function loadProfile() {
       setIsLoading(true);
       setErrorMessage('');
-      setSuccessMessage('');
 
       try {
         const profile = await getMyProfile();
@@ -65,16 +64,18 @@ export function DisplayNameSection({
     }
 
     setErrorMessage('');
-    setSuccessMessage('');
     setIsSaving(true);
 
     try {
       const profile = await updateMyDisplayName(trimmedDisplayName);
       setDisplayNameInput(profile.displayName);
       setSavedDisplayName(profile.displayName);
-      setSuccessMessage('저장했어요.');
       setIsEditing(false);
       onDisplayNameSaved();
+      Toast.show({
+        type: 'success',
+        text1: '표시 이름을 저장했어요.',
+      });
     } catch {
       setErrorMessage('표시 이름을 저장하지 못했어요.');
     } finally {
@@ -85,14 +86,12 @@ export function DisplayNameSection({
   function handleStartEdit() {
     setDisplayNameInput(savedDisplayName);
     setErrorMessage('');
-    setSuccessMessage('');
     setIsEditing(true);
   }
 
   function handleCancelEdit() {
     setDisplayNameInput(savedDisplayName);
     setErrorMessage('');
-    setSuccessMessage('');
     setIsEditing(false);
   }
 
@@ -123,10 +122,7 @@ export function DisplayNameSection({
           <TextInput
             style={styles.input}
             value={displayNameInput}
-            onChangeText={(nextDisplayName) => {
-              setDisplayNameInput(nextDisplayName);
-              setSuccessMessage('');
-            }}
+            onChangeText={setDisplayNameInput}
             placeholder={isLoading ? '불러오는 중...' : '표시 이름'}
             placeholderTextColor="#99998E"
             autoCorrect={false}
@@ -182,8 +178,6 @@ export function DisplayNameSection({
           {errorMessage}
         </Text>
       ) : null}
-
-      {successMessage ? <Text style={styles.successText}>{successMessage}</Text> : null}
     </View>
   );
 }
@@ -303,11 +297,5 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 14,
     color: '#B23B2E',
-  },
-  successText: {
-    marginTop: 2,
-    marginBottom: 10,
-    fontSize: 14,
-    color: '#2F6F67',
   },
 });

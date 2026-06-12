@@ -2,6 +2,7 @@ import { createInviteCode, type SpaceInvite } from '@/lib/invites';
 import * as Clipboard from 'expo-clipboard';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 interface InviteSectionProps {
   currentSpaceId: string | null;
@@ -10,7 +11,6 @@ interface InviteSectionProps {
 export function InviteSection({ currentSpaceId }: InviteSectionProps) {
   const [invite, setInvite] = useState<SpaceInvite | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
-  const [copyMessage, setCopyMessage] = useState('');
   const [isCreatingInvite, setIsCreatingInvite] = useState(false);
 
   const isInviteButtonDisabled = !currentSpaceId || isCreatingInvite;
@@ -18,7 +18,6 @@ export function InviteSection({ currentSpaceId }: InviteSectionProps) {
   useEffect(() => {
     setInvite(null);
     setErrorMessage('');
-    setCopyMessage('');
   }, [currentSpaceId]);
 
   async function handleCreateInviteCode() {
@@ -28,7 +27,6 @@ export function InviteSection({ currentSpaceId }: InviteSectionProps) {
     }
 
     setErrorMessage('');
-    setCopyMessage('');
     setIsCreatingInvite(true);
 
     try {
@@ -45,10 +43,12 @@ export function InviteSection({ currentSpaceId }: InviteSectionProps) {
   async function copyInviteCode(code: string) {
     try {
       await Clipboard.setStringAsync(code);
-      setCopyMessage('초대 코드를 복사했어요.');
       setErrorMessage('');
+      Toast.show({
+        type: 'success',
+        text1: '초대 코드를 복사했어요.',
+      });
     } catch {
-      setCopyMessage('');
       setErrorMessage('초대 코드를 복사하지 못했어요.');
     }
   }
@@ -88,9 +88,6 @@ export function InviteSection({ currentSpaceId }: InviteSectionProps) {
           <Text style={styles.copyHintText}>코드를 누르면 다시 복사돼요.</Text>
         </Pressable>
       ) : null}
-
-      {copyMessage ? <Text style={styles.successText}>{copyMessage}</Text> : null}
-
       {errorMessage ? (
         <Text accessibilityRole="alert" style={styles.errorText}>
           {errorMessage}
@@ -163,11 +160,5 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 14,
     color: '#B23B2E',
-  },
-  successText: {
-    marginTop: 2,
-    marginBottom: 10,
-    fontSize: 14,
-    color: '#2F6F67',
   },
 });
