@@ -16,7 +16,7 @@
 ```text
 Create a mobile app UI design for an app called "homeTodo".
 
-homeTodo is a shared household chore TODO app for iOS and Android, built with React Native and Expo. Users belong to a shared "Space" such as "우리집", "자취방", or "가족집". Inside each Space, members manage recurring household chores together. The MVP uses simple email/password login with pre-created accounts. It does not include push notifications, magic links, OAuth, advanced roles, or marketplace distribution.
+homeTodo is a shared household chore TODO app for iOS and Android, built with React Native and Expo. Users belong to a shared "Space" such as "우리집", "자취방", or "가족집". Inside each Space, members manage recurring household chores together. The MVP uses simple email/password login with pre-created accounts. It does not include push notifications, magic links, OAuth, full role-management screens, or marketplace distribution.
 
 Design style:
 - Follow Apple Human Interface Guidelines.
@@ -39,7 +39,9 @@ Core MVP concept:
 - A weekly chore means "complete this once during the current week".
 - A monthly chore means "complete this once during the current month".
 - Chores are grouped by recurrence period.
-- Every Space member has the same permission: create, edit, delete, and complete chores.
+- Space members can create, edit, delete, and complete chores.
+- Space roles are shown as small read-only badges: owner, admin, member.
+- Only owner/admin can create invite codes.
 
 Create these screens:
 1. Login
@@ -414,13 +416,14 @@ Elements:
 - Header title: "설정"
 - Current Space name: "우리집"
 - Member list:
-  - 태준
-  - 민지
+  - 태준, 소유자
+  - 민지, 멤버
 - Invite section:
   - Button: "초대 코드 만들기"
   - Button or row: "초대 코드 복사"
+- Show helper text when the current user is a member: "초대 코드는 소유자 또는 관리자만 만들 수 있어요."
 - Logout button
-- Do not include role management, admin settings, or permission levels.
+- Show read-only role badges, but do not include role editing, admin settings, or permission management screens.
 
 Style:
 - Simple settings list

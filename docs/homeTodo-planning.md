@@ -137,6 +137,7 @@ MVP에서는 Occurrence를 DB 테이블로 저장하지 않고, 프론트엔드�
 - `id`
 - `space_id`
 - `user_id`
+- `role`: `owner`, `admin`, `member`
 - `joined_at`
 
 ### 7.4 space_invites
@@ -217,18 +218,21 @@ Supabase RLS는 Space 멤버십을 기준으로 설계한다.
 
 - Space 멤버만 해당 Space의 데이터를 읽을 수 있다.
 - Space 멤버만 해당 Space의 TODO를 완료할 수 있다.
-- Space 멤버는 모두 동일한 권한을 가진다.
-- Space 멤버는 TODO를 생성, 수정, 삭제할 수 있다.
+- Space 멤버는 `owner`, `admin`, `member` 중 하나의 역할을 가진다.
+- `owner`는 Space 생성자이며 초대 코드를 만들 수 있다.
+- `admin`은 Space 관리자로 초대 코드를 만들 수 있다.
+- `member`는 일반 멤버이며 TODO 조회, 생성, 수정, 삭제, 완료에 참여할 수 있지만 초대 코드는 만들 수 없다.
+- MVP에서는 TODO 생성, 수정, 삭제, 완료 권한은 모든 Space 멤버에게 허용한다.
 - Space 멤버는 완료 기록을 생성하거나 삭제하여 완료/완료 취소를 처리할 수 있다.
 - 완료/완료 취소 이벤트 로그는 Space 멤버가 조회할 수 있고, actor가 본인인 이벤트만 생성할 수 있다.
-- MVP에서는 owner, admin, member 같은 역할을 구분하지 않는다.
+- 역할 관리는 MVP 범위에 포함하지 않는다. 즉 앱에서 멤버의 역할을 변경하는 화면은 만들지 않는다.
 
 RLS 적용 방향:
 
 - `profiles`: 사용자는 자기 profile을 조회, 생성, 수정할 수 있다.
-- `spaces`: Space 멤버는 Space를 조회/수정할 수 있고, 로그인 사용자는 자기 id를 `created_by`로 하여 Space를 생성할 수 있다.
-- `space_members`: Space 멤버는 같은 Space의 멤버십 row를 조회할 수 있다. Space 생성자는 자신을 해당 Space의 멤버로 추가할 수 있다.
-- `space_invites`: Space 멤버는 해당 Space의 초대 코드를 조회, 생성, 수정할 수 있다. 초대 코드로 참여하는 흐름은 별도 RPC 함수로 처리한다.
+- `spaces`: Space 멤버는 Space를 조회/수정할 수 있다. Space 생성은 `create_space` RPC로 처리하며 생성자는 `owner`가 된다.
+- `space_members`: Space 멤버는 같은 Space의 멤버십 row를 조회할 수 있다. 멤버 직접 추가는 열지 않고 초대 코드 참여 RPC로 처리한다.
+- `space_invites`: 초대 코드는 bearer secret에 가깝기 때문에 `owner` 또는 `admin`만 조회/생성할 수 있다. 초대 코드 생성은 `create_invite_code` RPC, 초대 코드 참여는 `join_space_with_invite_code` RPC로 처리한다.
 - `chores`: Space 멤버는 해당 Space의 Chore를 조회, 생성, 수정, 삭제할 수 있다.
 - `chore_completions`: Space 멤버는 완료 상태를 조회, 생성, 삭제할 수 있다. 수정은 허용하지 않는다.
 - `chore_completion_events`: Space 멤버는 이벤트 로그를 조회할 수 있고, 본인이 actor인 이벤트만 생성할 수 있다. 수정/삭제는 허용하지 않는다.
@@ -468,19 +472,19 @@ MVP의 반복 기준은 "특정 날짜에 해야 함"이 아니라 "해당 기�
 ### 13.3 MVP 초대 방식
 
 MVP에서는 초대 코드 방식을 사용한다.
-Space 멤버가 초대 코드를 만들고, 다른 사용자는 앱에서 해당 코드를 직접 입력해 Space에 참여한다.
+Space의 `owner` 또는 `admin`이 초대 코드를 만들고, 다른 사용자는 앱에서 해당 코드를 직접 입력해 Space에 참여한다.
 
 초대 링크와 이메일 초대는 MVP 이후 후보 기능으로 둔다.
 Expo Go 환경에서 딥링크와 메일 발송 같은 부가 설정을 피하고, Supabase 테이블과 RLS 학습에 집중하기 위해서다.
 
 초대 흐름:
 
-1. 기존 Space 멤버가 Space 설정에서 초대 코드를 생성한다.
+1. 기존 Space의 `owner` 또는 `admin`이 Space 설정에서 초대 코드를 생성한다.
 2. 코드를 다른 사용자에게 직접 전달한다.
 3. 다른 사용자가 사전 생성된 계정으로 로그인한다.
 4. Space 선택 화면에서 초대 코드를 입력한다.
 5. 앱이 유효한 코드인지 확인한다.
-6. 유효하면 `space_members`에 사용자를 추가한다.
+6. 유효하면 `space_members`에 사용자를 `member` 역할로 추가한다.
 
 초대 코드는 MVP에서 별도 비밀번호를 요구하지 않는다.
 대신 8자리 이상의 대문자/숫자 랜덤 코드, 짧은 만료 시간, 사용 횟수 제한, 전역 unique 제약을 사용한다.
@@ -489,10 +493,15 @@ Expo Go 환경에서 딥링크와 메일 발송 같은 부가 설정을 피하�
 
 ### 13.4 MVP 권한 모델
 
-MVP에서는 Space 멤버의 권한을 세분화하지 않는다.
-같은 Space에 속한 사용자는 모두 동일한 권한을 가지며, TODO를 생성, 수정, 삭제, 완료할 수 있다.
+MVP에서는 `owner`, `admin`, `member` 역할을 사용한다.
+이 역할은 주로 초대 코드 생성 권한을 제한하기 위한 최소 권한 모델이다.
 
-상용 앱이라면 owner, admin, member 같은 역할이 필요할 수 있지만, 이 프로젝트에서는 학습과 단순한 공유 사용성을 우선한다.
+- `owner`: Space 생성자. 초대 코드를 만들 수 있다.
+- `admin`: Space 관리자. 초대 코드를 만들 수 있다.
+- `member`: 일반 멤버. 초대 코드는 만들 수 없지만 TODO 생성, 수정, 삭제, 완료는 할 수 있다.
+
+MVP에서는 역할 변경 UI를 만들지 않는다.
+상용 앱이라면 멤버 초대, 강퇴, 역할 변경, 소유권 이전 같은 기능이 필요할 수 있지만, 이 프로젝트에서는 초대 코드 보안을 위한 최소 역할 구분까지만 다룬다.
 
 ### 13.5 기본 Space 생성
 

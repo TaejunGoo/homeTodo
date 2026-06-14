@@ -24,6 +24,21 @@ The frontend reads the current user's role through `currentSpace.role` and uses 
 
 This frontend role check is for user experience only. The real permission boundary is still in the database.
 
+## Invite Code Read Policy
+
+Invite codes behave like bearer secrets: anyone who can read a valid code can share it.
+Therefore, `space_invites` rows should not be readable by every Space member.
+
+Current policy:
+
+- `owner` and `admin` can create invite codes through `create_invite_code`.
+- `owner` and `admin` can read invite rows for their Space.
+- `member` cannot create invite codes.
+- `member` should not be able to read invite rows directly.
+- Joining by code still goes through `join_space_with_invite_code(invite_code)`.
+
+The migration `202606140001_restrict_invite_select_to_space_admins.sql` drops the old member-wide select policy and replaces it with an admin-only select policy.
+
 ## RPC First For Sensitive Writes
 
 Simple reads can use table queries with RLS:
