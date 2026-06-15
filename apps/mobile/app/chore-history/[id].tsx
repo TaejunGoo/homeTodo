@@ -104,7 +104,7 @@ export default function ChoreHistoryScreen() {
       return;
     }
 
-    router.replace('/(tabs)');
+    router.replace('/');
   }
 
   return (

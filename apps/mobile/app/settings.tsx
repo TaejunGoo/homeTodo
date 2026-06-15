@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SettingsScreen() {
   const { currentSpace, currentSpaceId, currentUserEmail } = useSpace();
@@ -21,35 +22,61 @@ export default function SettingsScreen() {
     router.replace('/login');
   }
 
+  function closeSettingsScreen() {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace('/');
+  }
+
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Text style={styles.title}>설정</Text>
-        <Text style={styles.description}>스페이스와 멤버 정보를 관리해요.</Text>
+    <SafeAreaView style={styles.screen}>
+      <View style={styles.routeHeader}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="뒤로 가기"
+          hitSlop={8}
+          onPress={closeSettingsScreen}
+        >
+          <Text style={styles.backText}>‹ 뒤로</Text>
+        </Pressable>
+
+        <Text style={styles.routeTitle}>설정</Text>
+
+        <View style={styles.headerSpacer} />
       </View>
 
-      <AccountSection email={currentUserEmail} />
-      <DisplayNameSection
-        currentUserEmail={currentUserEmail}
-        onDisplayNameSaved={() => setMembersRefreshKey((key) => key + 1)}
-      />
-      <CurrentSpaceSection currentSpace={currentSpace} />
-      <ManagementSection />
-      <MembersSection currentSpaceId={currentSpaceId} refreshKey={membersRefreshKey} />
-      <InviteSection
-        currentSpaceId={currentSpaceId}
-        currentSpaceRole={currentSpace?.role ?? null}
-      />
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.header}>
+          <Text style={styles.title}>설정</Text>
+          <Text style={styles.description}>스페이스와 멤버 정보를 관리해요.</Text>
+        </View>
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="로그아웃"
-        style={({ pressed }) => [styles.logoutButton, pressed && styles.logoutButtonPressed]}
-        onPress={handleLogout}
-      >
-        <Text style={styles.logoutButtonText}>로그아웃</Text>
-      </Pressable>
-    </ScrollView>
+        <AccountSection email={currentUserEmail} />
+        <DisplayNameSection
+          currentUserEmail={currentUserEmail}
+          onDisplayNameSaved={() => setMembersRefreshKey((key) => key + 1)}
+        />
+        <CurrentSpaceSection currentSpace={currentSpace} />
+        <ManagementSection />
+        <MembersSection currentSpaceId={currentSpaceId} refreshKey={membersRefreshKey} />
+        <InviteSection
+          currentSpaceId={currentSpaceId}
+          currentSpaceRole={currentSpace?.role ?? null}
+        />
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="로그아웃"
+          style={({ pressed }) => [styles.logoutButton, pressed && styles.logoutButtonPressed]}
+          onPress={handleLogout}
+        >
+          <Text style={styles.logoutButtonText}>로그아웃</Text>
+        </Pressable>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -82,8 +109,27 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    paddingTop: 64,
+    paddingTop: 20,
     paddingBottom: 40,
+  },
+  routeHeader: {
+    height: 56,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  backText: {
+    fontSize: 17,
+    color: '#2F6F67',
+  },
+  routeTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#1F2520',
+  },
+  headerSpacer: {
+    width: 52,
   },
   header: {
     marginBottom: 24,

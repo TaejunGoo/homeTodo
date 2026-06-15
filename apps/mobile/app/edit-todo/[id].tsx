@@ -46,7 +46,7 @@ export default function EditTodoScreen() {
       return;
     }
 
-    router.replace('/(tabs)');
+    router.replace('/');
   }
 
   const loadChore = useCallback(async () => {

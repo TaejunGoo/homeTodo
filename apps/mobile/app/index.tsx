@@ -1,10 +1,10 @@
+import { AppHeader } from '@/components/app-header';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { OccurrenceActionSheet } from '@/components/home/occurrence-action-sheet';
 import { OccurrenceSection } from '@/components/home/occurrence-section';
 import { UncompleteConfirmModal } from '@/components/home/uncomplete-confirm-modal';
 import { LoadingState } from '@/components/loading-state';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useSpace } from '@/contexts/space-context';
 import { useHomeOccurrences } from '@/hooks/use-home-occurrences';
 import type { ChoreOccurrence } from '@/lib/chore-occurrences';
@@ -58,23 +58,13 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="스페이스 선택"
-            hitSlop={8}
-            onPress={() => router.push('/select-space')}
-            style={({ pressed }) => [styles.spaceSelector, pressed && styles.spaceSelectorPressed]}
-          >
-            <Text style={styles.spaceLabel}>현재 스페이스</Text>
-            <View style={styles.spaceNameRow}>
-              <Text style={styles.spaceName}>{currentSpace?.name ?? '스페이스 없음'}</Text>
-              <IconSymbol name="chevron.down" size={24} color="#77776B" />
-            </View>
-          </Pressable>
-        </View>
+      <AppHeader
+        onPressSettings={() => router.push('/settings')}
+        onPressSpace={() => router.push('/select-space')}
+        spaceName={currentSpace?.name ?? '스페이스 없음'}
+      />
 
+      <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.summary}>
           <Text style={styles.summaryTitle}>오늘 할 집안일</Text>
           <Text style={styles.summaryText}>
@@ -144,35 +134,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    paddingTop: 20,
     paddingBottom: 120,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  spaceSelector: {
-    flex: 1,
-  },
-  spaceSelectorPressed: {
-    opacity: 0.72,
-  },
-  spaceNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  spaceLabel: {
-    fontSize: 13,
-    color: '#77776B',
-    marginBottom: 4,
-  },
-  spaceName: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#1F2520',
-    flexShrink: 1,
   },
   summary: {
     marginBottom: 20,
