@@ -31,6 +31,7 @@ export default function HomeScreen() {
     totalCount,
     uncompleteOccurrence,
     uncompleteSelectedOccurrence,
+    viewSelectedOccurrenceHistory,
   } = useHomeOccurrences(currentSpaceId);
   const [confirmUncompleteOccurrence, setConfirmUncompleteOccurrence] =
     useState<ChoreOccurrence | null>(null);
@@ -124,6 +125,7 @@ export default function HomeScreen() {
         onClose={() => setSelectedOccurrence(null)}
         onComplete={completeSelectedOccurrence}
         onEdit={editSelectedOccurrence}
+        onViewHistory={viewSelectedOccurrenceHistory}
         onUncomplete={uncompleteSelectedOccurrence}
       />
       <UncompleteConfirmModal

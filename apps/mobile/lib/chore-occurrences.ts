@@ -5,14 +5,18 @@ export interface ChoreOccurrence {
   chore: Chore;
   recurrenceType: RecurrenceType;
   targetPeriodStart: string;
+  previousTargetPeriodStart: string | null;
+  periodLabel: string;
   isCompleted: boolean;
   completedAt: string | null;
   completedBy: string | null;
+  wasPreviousCompleted: boolean | null;
 }
 
 export interface ChoreOccurrenceSection {
   title: string;
   type: RecurrenceType;
+  periodLabel: string | null;
   occurrences: ChoreOccurrence[];
 }
 
@@ -45,16 +49,20 @@ export async function getCurrentChoreOccurrenceSections(
     const completion = completionMap.get(
       getCompletionKey(occurrence.chore.id, occurrence.targetPeriodStart),
     );
-
-    if (!completion) {
-      return occurrence;
-    }
+    const previousCompletion = occurrence.previousTargetPeriodStart
+      ? completionMap.get(
+          getCompletionKey(occurrence.chore.id, occurrence.previousTargetPeriodStart),
+        )
+      : null;
 
     return {
       ...occurrence,
-      isCompleted: true,
-      completedAt: completion.completed_at,
-      completedBy: completion.completed_by,
+      isCompleted: Boolean(completion),
+      completedAt: completion?.completed_at ?? null,
+      completedBy: completion?.completed_by ?? null,
+      wasPreviousCompleted: occurrence.previousTargetPeriodStart
+        ? Boolean(previousCompletion)
+        : null,
     };
   });
 
@@ -88,13 +96,18 @@ function buildCurrentOccurrence(chore: Chore, today: Date): ChoreOccurrence | nu
     return null;
   }
 
+  const previousTargetPeriodStart = getPreviousTargetPeriodStart(chore, targetPeriodStart);
+
   return {
     chore,
     recurrenceType: chore.recurrenceType,
     targetPeriodStart,
+    previousTargetPeriodStart,
+    periodLabel: getChorePeriodLabel(chore, targetPeriodStart),
     isCompleted: false,
     completedAt: null,
     completedBy: null,
+    wasPreviousCompleted: null,
   };
 }
 
@@ -102,7 +115,15 @@ async function getMatchingCompletions(
   spaceId: string,
   occurrences: ChoreOccurrence[],
 ): Promise<ChoreCompletionRow[]> {
-  const periodStarts = [...new Set(occurrences.map((occurrence) => occurrence.targetPeriodStart))];
+  const periodStarts = [
+    ...new Set(
+      occurrences.flatMap((occurrence) =>
+        occurrence.previousTargetPeriodStart
+          ? [occurrence.targetPeriodStart, occurrence.previousTargetPeriodStart]
+          : [occurrence.targetPeriodStart],
+      ),
+    ),
+  ];
 
   const result = await supabase
     .from('chore_completions')
@@ -115,8 +136,13 @@ async function getMatchingCompletions(
   }
 
   const occurrenceKeys = new Set(
-    occurrences.map((occurrence) =>
-      getCompletionKey(occurrence.chore.id, occurrence.targetPeriodStart),
+    occurrences.flatMap((occurrence) =>
+      occurrence.previousTargetPeriodStart
+        ? [
+            getCompletionKey(occurrence.chore.id, occurrence.targetPeriodStart),
+            getCompletionKey(occurrence.chore.id, occurrence.previousTargetPeriodStart),
+          ]
+        : [getCompletionKey(occurrence.chore.id, occurrence.targetPeriodStart)],
     ),
   );
 
@@ -126,12 +152,18 @@ async function getMatchingCompletions(
 }
 
 function buildSections(occurrences: ChoreOccurrence[]): ChoreOccurrenceSection[] {
-  return recurrenceSections.map((section) => ({
-    ...section,
-    occurrences: occurrences
+  return recurrenceSections.map((section) => {
+    const sectionOccurrences = occurrences
       .filter((occurrence) => occurrence.recurrenceType === section.type)
-      .sort(compareOccurrences),
-  }));
+      .sort(compareOccurrences);
+
+    return {
+      ...section,
+      periodLabel:
+        section.type === 'interval_days' ? null : getSectionPeriodLabel(sectionOccurrences),
+      occurrences: sectionOccurrences,
+    };
+  });
 }
 
 function compareOccurrences(a: ChoreOccurrence, b: ChoreOccurrence) {
@@ -152,6 +184,62 @@ function getIntervalPeriodStart(startDate: Date, today: Date, intervalDays: numb
   const periodStart = addDays(startDate, elapsedIntervals * intervalDays);
 
   return formatDateKey(periodStart);
+}
+
+export function getChorePeriodLabel(chore: Chore, targetPeriodStart: string) {
+  const startDate = parseDateKey(targetPeriodStart);
+
+  switch (chore.recurrenceType) {
+    case 'daily':
+      return formatFullDate(startDate);
+    case 'weekly':
+      return formatDateRange(startDate, addDays(startDate, 6));
+    case 'monthly':
+      return `${startDate.getFullYear()}.${String(startDate.getMonth() + 1).padStart(2, '0')}`;
+    case 'interval_days':
+      return formatDateRange(startDate, addDays(startDate, (chore.recurrenceValue ?? 1) - 1));
+  }
+}
+
+function getSectionPeriodLabel(occurrences: ChoreOccurrence[]) {
+  const periodLabels = [...new Set(occurrences.map((occurrence) => occurrence.periodLabel))];
+
+  if (periodLabels.length === 1) {
+    return periodLabels[0];
+  }
+
+  return null;
+}
+
+function getPreviousTargetPeriodStart(chore: Chore, targetPeriodStart: string) {
+  const currentPeriodStart = parseDateKey(targetPeriodStart);
+  const startDate = parseDateKey(chore.startDate);
+  let previousPeriodStart: Date;
+
+  switch (chore.recurrenceType) {
+    case 'daily':
+      previousPeriodStart = addDays(currentPeriodStart, -1);
+      break;
+    case 'weekly':
+      previousPeriodStart = addDays(currentPeriodStart, -7);
+      break;
+    case 'monthly':
+      previousPeriodStart = new Date(
+        currentPeriodStart.getFullYear(),
+        currentPeriodStart.getMonth() - 1,
+        1,
+      );
+      break;
+    case 'interval_days':
+      previousPeriodStart = addDays(currentPeriodStart, -(chore.recurrenceValue ?? 1));
+      break;
+  }
+
+  if (previousPeriodStart < startDate) {
+    return null;
+  }
+
+  return formatDateKey(previousPeriodStart);
 }
 
 function startOfIsoWeek(date: Date) {
@@ -188,4 +276,25 @@ function formatDateKey(date: Date) {
   const day = String(date.getDate()).padStart(2, '0');
 
   return `${year}-${month}-${day}`;
+}
+
+function formatFullDate(date: Date) {
+  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(
+    date.getDate(),
+  ).padStart(2, '0')}`;
+}
+
+function formatShortDate(date: Date) {
+  return `${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(
+    2,
+    '0',
+  )}`;
+}
+
+function formatDateRange(startDate: Date, endDate: Date) {
+  if (startDate.getFullYear() === endDate.getFullYear()) {
+    return `${formatFullDate(startDate)} - ${formatShortDate(endDate)}`;
+  }
+
+  return `${formatFullDate(startDate)} - ${formatFullDate(endDate)}`;
 }

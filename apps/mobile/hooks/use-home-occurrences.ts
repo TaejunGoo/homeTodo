@@ -154,6 +154,17 @@ export function useHomeOccurrences(currentSpaceId: string | null) {
     router.push(`/edit-todo/${choreId}`);
   }
 
+  function viewSelectedOccurrenceHistory() {
+    if (!selectedOccurrence) {
+      return;
+    }
+
+    const choreId = selectedOccurrence.chore.id;
+
+    setSelectedOccurrence(null);
+    router.push(`/chore-history/${choreId}`);
+  }
+
   return {
     completedCount,
     completeOccurrence,
@@ -169,5 +180,6 @@ export function useHomeOccurrences(currentSpaceId: string | null) {
     totalCount,
     uncompleteOccurrence,
     uncompleteSelectedOccurrence,
+    viewSelectedOccurrenceHistory,
   };
 }

@@ -14,7 +14,6 @@ export function OccurrenceSection({
   onPressOccurrence,
 }: OccurrenceSectionProps) {
   const totalCount = section.occurrences.length;
-  const completedCount = section.occurrences.filter((occurrence) => occurrence.isCompleted).length;
 
   if (totalCount === 0) {
     return null;
@@ -24,9 +23,7 @@ export function OccurrenceSection({
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>{section.title}</Text>
-        <Text style={styles.progress}>
-          {completedCount}/{totalCount} 완료
-        </Text>
+        {section.periodLabel ? <Text style={styles.sectionPeriod}>{section.periodLabel}</Text> : null}
       </View>
 
       {section.occurrences.map((occurrence) => (
@@ -67,11 +64,30 @@ function OccurrenceListItem({
 }
 
 function getOccurrenceMeta(occurrence: ChoreOccurrence) {
+  const metaItems: string[] = [];
+
   if (occurrence.recurrenceType !== 'interval_days') {
+    return getPreviousCompletionMeta(occurrence);
+  }
+
+  metaItems.push(`${occurrence.chore.recurrenceValue ?? '-'}일마다`);
+  metaItems.push(occurrence.periodLabel);
+
+  const previousCompletionMeta = getPreviousCompletionMeta(occurrence);
+
+  if (previousCompletionMeta) {
+    metaItems.push(previousCompletionMeta);
+  }
+
+  return metaItems.join(' · ');
+}
+
+function getPreviousCompletionMeta(occurrence: ChoreOccurrence) {
+  if (occurrence.wasPreviousCompleted === null) {
     return undefined;
   }
 
-  return `${occurrence.chore.recurrenceValue ?? '-'}일마다`;
+  return occurrence.wasPreviousCompleted ? '지난번 완료' : '지난번 미완료';
 }
 
 const styles = StyleSheet.create({
@@ -86,15 +102,20 @@ const styles = StyleSheet.create({
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
     marginBottom: 12,
   },
   sectionTitle: {
+    flex: 1,
     fontSize: 17,
     fontWeight: '700',
     color: '#1F2520',
   },
-  progress: {
-    fontSize: 14,
+  sectionPeriod: {
+    fontSize: 13,
+    fontWeight: '500',
     color: '#77776B',
+    flexShrink: 0,
   },
 });

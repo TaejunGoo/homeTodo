@@ -34,6 +34,7 @@ export default function SettingsScreen() {
         onDisplayNameSaved={() => setMembersRefreshKey((key) => key + 1)}
       />
       <CurrentSpaceSection currentSpace={currentSpace} />
+      <ManagementSection />
       <MembersSection currentSpaceId={currentSpaceId} refreshKey={membersRefreshKey} />
       <InviteSection
         currentSpaceId={currentSpaceId}
@@ -49,6 +50,28 @@ export default function SettingsScreen() {
         <Text style={styles.logoutButtonText}>로그아웃</Text>
       </Pressable>
     </ScrollView>
+  );
+}
+
+function ManagementSection() {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>관리</Text>
+      <View style={styles.managementActions}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="완료 이력"
+          onPress={() => router.push('/history')}
+          style={({ pressed }) => [
+            styles.managementButton,
+            pressed && styles.managementButtonPressed,
+          ]}
+        >
+          <Text style={styles.managementButtonTitle}>완료 이력</Text>
+          <Text style={styles.managementButtonDescription}>스페이스의 완료 기록을 확인해요.</Text>
+        </Pressable>
+      </View>
+    </View>
   );
 }
 
@@ -73,6 +96,47 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 15,
+    color: '#77776B',
+  },
+  section: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E4E2DA',
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    marginBottom: 14,
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#1F2520',
+    marginBottom: 12,
+  },
+  managementActions: {
+    gap: 8,
+  },
+  managementButton: {
+    minHeight: 58,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E4E2DA',
+    backgroundColor: '#F7F7F4',
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 3,
+  },
+  managementButtonPressed: {
+    opacity: 0.78,
+    transform: [{ scale: 0.99 }],
+  },
+  managementButtonTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1F2520',
+  },
+  managementButtonDescription: {
+    fontSize: 13,
     color: '#77776B',
   },
   logoutButton: {

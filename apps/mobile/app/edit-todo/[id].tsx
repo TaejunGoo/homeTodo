@@ -1,5 +1,6 @@
 import { ConfirmModal } from '@/components/confirm-modal';
 import { deactivateChore, getChore, updateChore, type RecurrenceType } from '@/lib/chores';
+import { getProfilesByIds } from '@/lib/profiles';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -33,6 +34,8 @@ export default function EditTodoScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [createdByName, setCreatedByName] = useState('');
+  const [createdAt, setCreatedAt] = useState('');
 
   const trimmedTitle = title.trim();
   const isSubmitDisabled = trimmedTitle.length === 0 || isLoading || isSaving || isDeleting;
@@ -43,7 +46,7 @@ export default function EditTodoScreen() {
       return;
     }
 
-    router.replace('/(tabs)/todos');
+    router.replace('/(tabs)');
   }
 
   const loadChore = useCallback(async () => {
@@ -58,9 +61,14 @@ export default function EditTodoScreen() {
 
     try {
       const chore = await getChore(id);
+      const profiles = await getProfilesByIds([chore.createdBy]);
+      const creatorProfile = profiles[0];
+
       setTitle(chore.title);
       setRecurrenceType(chore.recurrenceType);
       setIntervalDays(String(chore.recurrenceValue ?? 3));
+      setCreatedByName(creatorProfile?.displayName ?? '이름 없음');
+      setCreatedAt(chore.createdAt);
     } catch {
       setErrorMessage('TODO를 불러오지 못했어요.');
     } finally {
@@ -216,6 +224,11 @@ export default function EditTodoScreen() {
                 ) : null}
               </View>
 
+              <View style={styles.infoBox}>
+                <InfoRow label="등록자" value={createdByName || '이름 없음'} />
+                <InfoRow label="등록일" value={createdAt ? formatDate(createdAt) : '-'} />
+              </View>
+
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="TODO 삭제"
@@ -290,6 +303,29 @@ function RecurrenceOptionButton({ label, selected, onPress }: RecurrenceOptionBu
       <Text style={[styles.segmentText, selected && styles.segmentTextSelected]}>{label}</Text>
     </Pressable>
   );
+}
+
+interface InfoRowProps {
+  label: string;
+  value: string;
+}
+
+function InfoRow({ label, value }: InfoRowProps) {
+  return (
+    <View style={styles.infoRow}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={styles.infoValue}>{value}</Text>
+    </View>
+  );
+}
+
+function formatDate(dateString: string) {
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}.${month}.${day}`;
 }
 
 const styles = StyleSheet.create({
@@ -378,6 +414,31 @@ const styles = StyleSheet.create({
   intervalField: {
     marginTop: 12,
     gap: 8,
+  },
+  infoBox: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E4E2DA',
+    backgroundColor: '#FFFFFF',
+    padding: 14,
+    gap: 8,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  infoLabel: {
+    fontSize: 14,
+    color: '#77776B',
+  },
+  infoValue: {
+    flex: 1,
+    textAlign: 'right',
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2520',
   },
   statusText: {
     fontSize: 14,

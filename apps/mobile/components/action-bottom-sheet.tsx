@@ -20,7 +20,7 @@ interface ActionBottomSheetProps {
 export function ActionBottomSheet({ visible, title, actions, onClose }: ActionBottomSheetProps) {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const insets = useSafeAreaInsets();
-  const snapPoints = useMemo(() => ['34%'], []);
+  const snapPoints = useMemo(() => ['42%'], []);
   const [isBackdropVisible, setIsBackdropVisible] = useState(false);
 
   useEffect(() => {

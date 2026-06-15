@@ -6,6 +6,7 @@ interface OccurrenceActionSheetProps {
   onClose: () => void;
   onComplete: () => void;
   onEdit: () => void;
+  onViewHistory: () => void;
   onUncomplete: () => void;
 }
 
@@ -14,6 +15,7 @@ export function OccurrenceActionSheet({
   onClose,
   onComplete,
   onEdit,
+  onViewHistory,
   onUncomplete,
 }: OccurrenceActionSheetProps) {
   const isCompleted = occurrence?.isCompleted === true;
@@ -25,6 +27,11 @@ export function OccurrenceActionSheet({
         {
           label: primaryActionLabel,
           onPress: isCompleted ? onUncomplete : onComplete,
+        },
+        {
+          label: '이력 보기',
+          accessibilityLabel: 'TODO 이력 보기',
+          onPress: onViewHistory,
         },
         {
           label: 'TODO 수정/삭제',
