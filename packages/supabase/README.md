@@ -30,6 +30,7 @@ packages/supabase/migrations/
   202606120007_harden_space_security.sql
   202606120008_grant_space_admin_helper.sql
   202606120009_fix_create_invite_code_ambiguous_columns.sql
+  202606140001_restrict_invite_select_to_space_admins.sql
 ```
 
 Current MVP security baseline:
@@ -43,7 +44,7 @@ Current MVP security baseline:
 - `space_members.role` uses `owner`, `admin`, and `member`.
 - Only `owner` and `admin` members can create invite codes.
 - Invite creation expires the same user's previous active invite code for the same space.
-- Authenticated clients can read allowed space, membership, and invite rows through RLS, but direct writes to `spaces`, `space_members`, and `space_invites` are restricted. Sensitive writes should go through RPCs.
+- Authenticated clients can read allowed space and membership rows through RLS. Invite rows are readable only by `owner` and `admin` members. Direct writes to `spaces`, `space_members`, and `space_invites` are restricted, and sensitive writes should go through RPCs.
 
 Deferred until after MVP:
 

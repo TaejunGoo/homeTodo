@@ -1142,3 +1142,98 @@ await Clipboard.setStringAsync(invite.code);
 
 `settings.tsx`도 기능이 늘어나면서 화면 파일이 비대해졌기 때문에 `components/settings/*` 섹션 컴포넌트로 나눴다.
 화면 파일은 어떤 섹션을 어떤 순서로 배치할지와, 섹션 사이 coordination만 갖는 편이 읽기 쉽다.
+
+## 41. 바텀시트는 제스처와 닫힘 타이밍을 분리해서 생각한다
+
+React Native의 `Modal`로도 아래에서 올라오는 화면처럼 만들 수 있지만, 손가락으로 끌어내려 닫는 동작은 직접 구현하기 번거롭다.
+이런 경우에는 `@gorhom/bottom-sheet`처럼 검증된 라이브러리를 쓰는 편이 낫다.
+
+```tsx
+<BottomSheet
+  enablePanDownToClose
+  index={0}
+  onClose={onClose}
+  snapPoints={snapPoints}
+>
+  <BottomSheetView>{/* actions */}</BottomSheetView>
+</BottomSheet>
+```
+
+루트에는 gesture handler가 동작할 수 있도록 `GestureHandlerRootView`를 둔다.
+
+```tsx
+<GestureHandlerRootView style={{ flex: 1 }}>
+  <App />
+</GestureHandlerRootView>
+```
+
+닫기 UX에서는 두 가지 타이밍을 분리해야 한다.
+
+```text
+오버레이 dim 제거
+= 사용자가 닫기를 누른 즉시
+
+sheet 컴포넌트 제거
+= BottomSheet 닫힘 애니메이션이 끝난 뒤
+```
+
+부모 상태를 바로 `null`로 만들면 sheet가 애니메이션 없이 사라진다.
+그래서 오버레이나 취소 버튼에서는 먼저 `bottomSheetRef.current?.close()`를 호출하고, `onClose`에서 부모 상태를 정리한다.
+
+## 42. Optimistic update는 정렬까지 즉시 바꾸지 않는 편이 자연스럽다
+
+오늘 화면에서 완료 체크를 누르면 서버 응답 전에 UI를 먼저 체크 상태로 바꾼다.
+이런 방식을 optimistic update라고 부른다.
+
+```text
+현재 sections 백업
+UI를 먼저 완료 상태로 변경
+Supabase 요청
+실패하면 백업한 sections로 롤백
+```
+
+하지만 완료 즉시 항목 순서까지 바꾸면 사용자가 방금 누른 항목이 화면에서 이동해 어색하다.
+그래서 현재 화면에서는 체크 상태만 바꾸고, 정렬은 데이터를 다시 로드할 때만 적용한다.
+
+현재 홈 화면 정렬 규칙은 아래와 같다.
+
+```text
+1. 미완료 먼저
+2. 완료 나중
+3. 같은 상태 안에서는 생성일 오래된 순
+```
+
+`N일마다`처럼 같은 섹션 안에서도 값이 다른 정보는 섹션을 더 쪼개기보다 item meta로 표시한다.
+
+```text
+N일마다
+- 정수기 필터 확인
+  3일마다
+```
+
+## 43. 공용 UI는 껍데기와 도메인 어댑터를 나누면 재사용이 쉽다
+
+완료 취소 확인과 TODO 삭제 확인은 UI 구조가 같다.
+그래서 `ConfirmModal`은 공용 껍데기로 만들고, 화면별 문구와 액션만 넘긴다.
+
+```tsx
+<ConfirmModal
+  title="완료를 취소할까요?"
+  cancelLabel="아니요"
+  confirmLabel="완료 취소"
+  confirmVariant="danger"
+/>
+```
+
+바텀시트도 마찬가지다.
+`ActionBottomSheet`는 title과 actions 배열만 받아 렌더링하고, 홈 화면의 occurrence 메뉴는 `OccurrenceActionSheet`라는 얇은 어댑터가 담당한다.
+
+```text
+ActionBottomSheet
+= 공용 UI 껍데기
+
+OccurrenceActionSheet
+= homeTodo의 TODO occurrence 액션 정의
+```
+
+이렇게 나누면 공용 컴포넌트는 다른 화면에서도 재사용할 수 있고, 도메인 컴포넌트는 앱의 단어와 행동만 담게 된다.

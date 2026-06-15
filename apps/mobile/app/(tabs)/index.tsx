@@ -1,42 +1,59 @@
-import { ChoreListItem } from '@/components/chore-list-item';
+import { EmptyState } from '@/components/empty-state';
+import { ErrorState } from '@/components/error-state';
+import { OccurrenceActionSheet } from '@/components/home/occurrence-action-sheet';
+import { OccurrenceSection } from '@/components/home/occurrence-section';
+import { UncompleteConfirmModal } from '@/components/home/uncomplete-confirm-modal';
+import { LoadingState } from '@/components/loading-state';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useSpace } from '@/contexts/space-context';
+import { useHomeOccurrences } from '@/hooks/use-home-occurrences';
+import type { ChoreOccurrence } from '@/lib/chore-occurrences';
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const sections = [
-  {
-    title: '매일',
-    progress: '1/2 완료',
-    chores: [
-      { id: 'today-daily-recycling', title: '분리수거', done: true },
-      { id: 'today-daily-sink-cleanup', title: '싱크대 정리', done: false },
-    ],
-  },
-  {
-    title: '매주',
-    progress: '0/2 완료',
-    chores: [
-      { id: 'today-weekly-bathroom-cleaning', title: '화장실 청소', done: false },
-      { id: 'today-weekly-bedding-laundry', title: '침구 세탁', done: false },
-    ],
-  },
-  {
-    title: '매월',
-    progress: '0/1 완료',
-    chores: [{ id: 'today-monthly-fridge-cleanup', title: '냉장고 정리', done: false }],
-  },
-  {
-    title: 'N일마다',
-    progress: '0/1 완료',
-    chores: [{ id: 'today-interval-water-filter-check', title: '정수기 필터 확인', done: false }],
-  },
-];
-
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const { currentSpace } = useSpace();
+  const { currentSpace, currentSpaceId } = useSpace();
+  const {
+    completedCount,
+    completeOccurrence,
+    completeSelectedOccurrence,
+    editSelectedOccurrence,
+    errorMessage,
+    hasNoOccurrences,
+    isLoading,
+    loadOccurrences,
+    sections,
+    selectedOccurrence,
+    setSelectedOccurrence,
+    totalCount,
+    uncompleteOccurrence,
+    uncompleteSelectedOccurrence,
+  } = useHomeOccurrences(currentSpaceId);
+  const [confirmUncompleteOccurrence, setConfirmUncompleteOccurrence] =
+    useState<ChoreOccurrence | null>(null);
+
+  function handlePressOccurrence(occurrence: ChoreOccurrence) {
+    if (occurrence.isCompleted) {
+      setConfirmUncompleteOccurrence(occurrence);
+      return;
+    }
+
+    completeOccurrence(occurrence);
+  }
+
+  function handleConfirmUncomplete() {
+    if (!confirmUncompleteOccurrence) {
+      return;
+    }
+
+    const occurrence = confirmUncompleteOccurrence;
+
+    setConfirmUncompleteOccurrence(null);
+    uncompleteOccurrence(occurrence);
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -59,32 +76,36 @@ export default function HomeScreen() {
 
         <View style={styles.summary}>
           <Text style={styles.summaryTitle}>오늘 할 집안일</Text>
-          <Text style={styles.summaryText}>현재 기간에 해야 할 일을 확인해요.</Text>
+          <Text style={styles.summaryText}>
+            현재 기간 기준 {completedCount}/{totalCount}개를 완료했어요.
+          </Text>
         </View>
 
-        {sections.map((section) => (
-          <View key={section.title} style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{section.title}</Text>
-              <Text style={styles.progress}>{section.progress}</Text>
-            </View>
+        {isLoading ? <LoadingState message="오늘 할 일을 불러오는 중이에요." /> : null}
 
-            {section.chores.map((chore) => (
-              <ChoreListItem
-                key={chore.id}
-                title={chore.title}
-                completed={chore.done}
-                showCheckbox
-                onPress={() => {
-                  // 추후 상세/수정화면 이동
-                }}
-                onMenuPress={() => {
-                  // 추후 바텀시트 오픈
-                }}
+        {!isLoading && errorMessage ? (
+          <ErrorState message={errorMessage} actionLabel="다시 시도" onActionPress={loadOccurrences} />
+        ) : null}
+
+        {hasNoOccurrences ? (
+          <EmptyState
+            title="오늘 표시할 TODO가 없어요"
+            description="TODO 만들기 버튼으로 반복 집안일을 추가해요."
+            actionLabel="TODO 만들기"
+            onActionPress={() => router.push('/create-todo')}
+          />
+        ) : null}
+
+        {!isLoading && !errorMessage
+          ? sections.map((section) => (
+              <OccurrenceSection
+                key={section.type}
+                section={section}
+                onOpenMenu={setSelectedOccurrence}
+                onPressOccurrence={handlePressOccurrence}
               />
-            ))}
-          </View>
-        ))}
+            ))
+          : null}
       </ScrollView>
       <Pressable
         accessibilityRole="button"
@@ -98,6 +119,18 @@ export default function HomeScreen() {
       >
         <Text style={styles.floatingButtonText}>+</Text>
       </Pressable>
+      <OccurrenceActionSheet
+        occurrence={selectedOccurrence}
+        onClose={() => setSelectedOccurrence(null)}
+        onComplete={completeSelectedOccurrence}
+        onEdit={editSelectedOccurrence}
+        onUncomplete={uncompleteSelectedOccurrence}
+      />
+      <UncompleteConfirmModal
+        occurrence={confirmUncompleteOccurrence}
+        onCancel={() => setConfirmUncompleteOccurrence(null)}
+        onConfirm={handleConfirmUncomplete}
+      />
     </SafeAreaView>
   );
 }
@@ -150,28 +183,6 @@ const styles = StyleSheet.create({
   },
   summaryText: {
     fontSize: 15,
-    color: '#77776B',
-  },
-  section: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: '#E4E2DA',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#1F2520',
-  },
-  progress: {
-    fontSize: 14,
     color: '#77776B',
   },
   floatingButton: {

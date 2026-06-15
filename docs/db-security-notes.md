@@ -1,5 +1,7 @@
 # DB Security Notes
 
+Related frontend implementation note: [`docs/frontend-guard-notes.md`](./frontend-guard-notes.md)
+
 ## Current MVP Baseline
 
 The app now treats `space_members` as the source of space permissions.
@@ -46,6 +48,7 @@ Simple reads can use table queries with RLS:
 ```ts
 supabase.from('spaces').select(...)
 supabase.from('space_members').select(...)
+supabase.from('chores').select(...)
 ```
 
 Sensitive writes should go through RPCs:
@@ -65,6 +68,15 @@ This keeps users from directly manipulating important columns such as:
 - `space_members.role`
 
 The client asks for an action. The DB function decides the actual row values.
+
+Chore creation is still a simple table insert in the MVP because all Space members can create chores and the row belongs to one table.
+The important protection is RLS:
+
+- `created_by` must be the current user.
+- `space_id` must be a Space where the current user is a member.
+- recurrence values are constrained by DB checks.
+
+If Chore creation later starts creating audit logs, templates, assignments, or notifications in the same action, it should move behind an RPC.
 
 ## Invite Code Rules
 

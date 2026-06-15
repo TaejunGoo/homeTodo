@@ -279,12 +279,12 @@ homeTodo/
 
 목표: 반복 집안일을 생성, 조회, 수정, 삭제한다.
 
-- [ ] Chore 목록 조회
-- [ ] Chore 생성
-- [ ] 반복 타입 선택
-- [ ] `daily`, `weekly`, `monthly`, `interval_days` 입력 처리
-- [ ] Chore 수정
-- [ ] Chore 삭제 또는 비활성화
+- [x] Chore 목록 조회
+- [x] Chore 생성
+- [x] 반복 타입 선택
+- [x] `daily`, `weekly`, `monthly`, `interval_days` 입력 처리
+- [x] Chore 수정
+- [x] Chore 삭제 또는 비활성화
 - [ ] Space 멤버 간 변경 사항 확인
 - [ ] 입력 검증 추가
 
@@ -296,15 +296,15 @@ homeTodo/
 
 목표: DB에 Occurrence를 저장하지 않고 프론트에서 현재 기간의 할 일을 계산한다.
 
-- [ ] 기간 계산 유틸 위치 결정
-- [ ] `date-fns` 도입 여부 결정
-- [ ] daily 기간 계산
-- [ ] weekly ISO 주차 계산
-- [ ] monthly 기간 계산
-- [ ] interval_days 기간 계산
-- [ ] `target_period_start` 계산
-- [ ] Completion과 조합해 완료 여부 계산
-- [ ] 오늘 화면에 현재 기간 미완료/완료 목록 표시
+- [x] 기간 계산 유틸 위치 결정
+- [x] `date-fns` 도입 여부 결정
+- [x] daily 기간 계산
+- [x] weekly ISO 주차 계산
+- [x] monthly 기간 계산
+- [x] interval_days 기간 계산
+- [x] `target_period_start` 계산
+- [x] Completion과 조합해 완료 여부 계산
+- [x] 오늘 화면에 현재 기간 미완료/완료 목록 표시
 - [ ] 계산 예시를 문서에 추가할지 검토
 
 확인 기준:
@@ -316,9 +316,10 @@ homeTodo/
 
 목표: 현재 기간의 집안일을 완료하고 이력을 볼 수 있게 한다.
 
-- [ ] 완료 버튼 구현
-- [ ] `chore_completions` 생성
-- [ ] 같은 기간 중복 완료 방지
+- [x] 완료 버튼 구현
+- [x] `chore_completions` 생성
+- [x] 같은 기간 중복 완료 방지
+- [x] 완료 취소 구현
 - [ ] 완료자 표시
 - [ ] 완료 시간 표시
 - [ ] 완료 이력 화면 조회
@@ -336,7 +337,9 @@ homeTodo/
 - [ ] 로딩 상태 정리
 - [ ] 에러 메시지 정리
 - [ ] 빈 상태 정리
-- [ ] 삭제 확인 흐름 추가
+- [x] 삭제 확인 흐름 추가
+- [x] 완료 취소 확인 흐름 추가
+- [x] 공용 확인 모달과 액션 바텀시트 분리
 - [ ] 로그인 만료 상태 처리
 - [ ] Space가 없을 때 첫 액션 명확화
 - [ ] Figma와 최종 앱 화면 비교
@@ -371,11 +374,10 @@ homeTodo/
 
 ## 5. 현재 다음 단계
 
-다음에 진행할 단계는 Phase 10의 Chore CRUD다.
+다음에 진행할 단계는 Phase 12의 Completion 기능이다.
 
-우선 현재 선택된 Space 기준으로 반복 집안일을 생성하고 조회하는 흐름부터 구현한다.
+우선 완료된 occurrence의 완료자와 완료 시간을 화면에 표시하고, 완료 이력 화면 조회로 확장한다.
 
-- Chore 목록 조회
-- Chore 생성
-- 반복 타입 선택
-- `daily`, `weekly`, `monthly`, `interval_days` 입력 처리
+- 완료자/완료 시간 표시
+- 완료 이력 화면 조회
+- 기간별 완료 목록 표시
