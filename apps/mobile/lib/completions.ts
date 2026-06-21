@@ -168,7 +168,7 @@ export async function getChoreCompletionHistory(
     items: visibleRows.map((event) => ({
       id: event.id,
       choreId: event.chore_id,
-      choreTitle: event.chores?.title ?? '알 수 없는 TODO',
+      choreTitle: event.chores?.title ?? '알 수 없는 할 일',
       actorId: event.actor_id,
       actorName: event.profiles?.display_name ?? '이름 없음',
       eventType: normalizeCompletionEventType(event.event_type),

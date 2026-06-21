@@ -1,3 +1,5 @@
+import { ErrorState } from '@/components/error-state';
+import { LoadingState } from '@/components/loading-state';
 import { ScreenHeading } from '@/components/screen-heading';
 import { useSpace } from '@/contexts/space-context';
 import { getSpaceRoleLabel } from '@/lib/spaces';
@@ -7,7 +9,8 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SelectSpaceScreen() {
-  const { spaces, currentSpaceId, isLoading, errorMessage, selectSpace } = useSpace();
+  const { spaces, currentSpaceId, isLoading, errorMessage, refreshSpaces, selectSpace } =
+    useSpace();
   const [draftSpaceId, setDraftSpaceId] = useState<string | null>(currentSpaceId);
   const isConfirmDisabled = !draftSpaceId;
 
@@ -20,23 +23,30 @@ export default function SelectSpaceScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <ScreenHeading
           title="스페이스 선택"
-          description="함께 관리할 집안일 공간을 선택해요."
+          description="함께 관리할 할 일 공간을 선택해요."
           showBackButton
         />
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>참여 중인 스페이스</Text>
 
-          {isLoading ? <Text style={styles.stateText}>스페이스를 불러오는 중...</Text> : null}
+          {isLoading ? <LoadingState message="스페이스를 불러오는 중이에요." /> : null}
 
-          {errorMessage ? (
-            <Text style={styles.errorText} accessibilityRole="alert">
-              {errorMessage}
-            </Text>
+          {!isLoading && errorMessage ? (
+            <ErrorState
+              message={errorMessage}
+              actionLabel="다시 시도"
+              onActionPress={refreshSpaces}
+            />
           ) : null}
 
           {!isLoading && !errorMessage && spaces.length === 0 ? (
-            <Text style={styles.stateText}>참여 중인 스페이스가 없어요.</Text>
+            <ErrorState
+              title="스페이스가 보이지 않아요"
+              message="기본 스페이스가 자동으로 만들어져야 해요. 다시 불러온 뒤에도 보이지 않으면 새 스페이스를 만들거나 초대 코드로 참여해 주세요."
+              actionLabel="다시 시도"
+              onActionPress={refreshSpaces}
+            />
           ) : null}
 
           {spaces.map((space) => {
@@ -142,16 +152,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1F2520',
     marginBottom: 8,
-  },
-  stateText: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#77776B',
-  },
-  errorText: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#B3261E',
   },
   spaceItem: {
     minHeight: 64,

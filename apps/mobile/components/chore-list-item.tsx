@@ -49,7 +49,7 @@ export function ChoreListItem({
         onPress={onMenuPress}
         style={({ pressed }) => [styles.more, pressed && styles.morePressed]}
       >
-        <Text style={styles.moreText}>...</Text>
+        <Text style={styles.moreText}>⋮</Text>
       </Pressable>
     </View>
   );

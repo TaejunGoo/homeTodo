@@ -68,11 +68,11 @@ export default function CreateTodoScreen() {
       });
       Toast.show({
         type: 'success',
-        text1: 'TODO를 만들었어요.',
+        text1: '할 일을 만들었어요.',
       });
       router.back();
     } catch {
-      setErrorMessage('TODO를 만들지 못했어요.');
+      setErrorMessage('할 일을 만들지 못했어요.');
     } finally {
       setIsSubmitting(false);
     }
@@ -95,7 +95,7 @@ export default function CreateTodoScreen() {
             <Text style={styles.backText}>‹ 취소</Text>
           </Pressable>
 
-          <Text style={styles.title}>TODO 만들기</Text>
+          <Text style={styles.title}>할 일 만들기</Text>
 
           <View style={styles.headerSpacer} />
         </View>
@@ -109,7 +109,7 @@ export default function CreateTodoScreen() {
             <Text style={styles.label}>제목</Text>
             <TextInput
               style={styles.input}
-              placeholder="예: 화장실 청소"
+              placeholder="예: 주간 회고"
               placeholderTextColor="#99998E"
               value={title}
               onChangeText={setTitle}
@@ -161,7 +161,7 @@ export default function CreateTodoScreen() {
         <View style={[styles.bottomAction, { paddingBottom: Math.max(insets.bottom, 16) }]}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="TODO 생성"
+            accessibilityLabel="할 일 생성"
             disabled={isSubmitDisabled}
             style={({ pressed }) => [
               styles.primaryButton,

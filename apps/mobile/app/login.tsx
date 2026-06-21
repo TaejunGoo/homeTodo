@@ -48,7 +48,7 @@ export default function LoginScreen() {
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.appName}>homeTodo</Text>
-          <Text style={styles.subtitle}>함께 관리하는 집안일 TODO</Text>
+          <Text style={styles.subtitle}>함께 관리하는 반복 할 일</Text>
         </View>
 
         <View style={styles.form}>

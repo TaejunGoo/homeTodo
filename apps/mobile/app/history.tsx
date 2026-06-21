@@ -110,7 +110,7 @@ export default function HistoryScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>완료 이력</Text>
-          <Text style={styles.description}>누가 어떤 집안일을 완료했는지 확인해요.</Text>
+          <Text style={styles.description}>누가 어떤 할 일을 완료했는지 확인해요.</Text>
         </View>
 
       {isLoading ? <LoadingState message="완료 이력을 불러오는 중이에요." /> : null}
@@ -122,7 +122,7 @@ export default function HistoryScreen() {
       {hasNoHistory ? (
         <EmptyState
           title="아직 완료 이력이 없어요"
-          description="오늘 화면에서 TODO를 완료하면 이곳에 기록돼요."
+          description="오늘 화면에서 할 일을 완료하면 이곳에 기록돼요."
         />
       ) : null}
 

@@ -25,7 +25,7 @@ export function CurrentSpaceSection({ currentSpace }: CurrentSpaceSectionProps) 
           ) : null}
         </View>
         <Text style={styles.cardMeta}>
-          {currentSpace ? '함께 관리 중' : '스페이스를 선택해 주세요.'}
+          {currentSpace ? '현재 선택된 스페이스' : '스페이스를 선택해 주세요.'}
         </Text>
       </Pressable>
     </View>

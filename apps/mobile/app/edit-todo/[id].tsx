@@ -51,7 +51,7 @@ export default function EditTodoScreen() {
 
   const loadChore = useCallback(async () => {
     if (!id) {
-      setErrorMessage('TODO를 찾지 못했어요.');
+      setErrorMessage('할 일을 찾지 못했어요.');
       setIsLoading(false);
       return;
     }
@@ -70,7 +70,7 @@ export default function EditTodoScreen() {
       setCreatedByName(creatorProfile?.displayName ?? '이름 없음');
       setCreatedAt(chore.createdAt);
     } catch {
-      setErrorMessage('TODO를 불러오지 못했어요.');
+      setErrorMessage('할 일을 불러오지 못했어요.');
     } finally {
       setIsLoading(false);
     }
@@ -82,7 +82,7 @@ export default function EditTodoScreen() {
 
   async function handleSave() {
     if (!id) {
-      setErrorMessage('TODO를 찾지 못했어요.');
+      setErrorMessage('할 일을 찾지 못했어요.');
       return;
     }
 
@@ -113,11 +113,11 @@ export default function EditTodoScreen() {
       });
       Toast.show({
         type: 'success',
-        text1: 'TODO를 저장했어요.',
+        text1: '할 일을 저장했어요.',
       });
       closeEditScreen();
     } catch {
-      setErrorMessage('TODO를 저장하지 못했어요.');
+      setErrorMessage('할 일을 저장하지 못했어요.');
     } finally {
       setIsSaving(false);
     }
@@ -125,7 +125,7 @@ export default function EditTodoScreen() {
 
   async function handleDelete() {
     if (!id) {
-      setErrorMessage('TODO를 찾지 못했어요.');
+      setErrorMessage('할 일을 찾지 못했어요.');
       return;
     }
 
@@ -136,12 +136,12 @@ export default function EditTodoScreen() {
       await deactivateChore(id);
       Toast.show({
         type: 'success',
-        text1: 'TODO를 삭제했어요.',
+        text1: '할 일을 삭제했어요.',
       });
       setIsDeleteModalVisible(false);
       closeEditScreen();
     } catch {
-      setErrorMessage('TODO를 삭제하지 못했어요.');
+      setErrorMessage('할 일을 삭제하지 못했어요.');
     } finally {
       setIsDeleting(false);
     }
@@ -164,7 +164,7 @@ export default function EditTodoScreen() {
             <Text style={styles.backText}>‹ 취소</Text>
           </Pressable>
 
-          <Text style={styles.title}>TODO 수정</Text>
+          <Text style={styles.title}>할 일 수정</Text>
 
           <View style={styles.headerSpacer} />
         </View>
@@ -174,7 +174,7 @@ export default function EditTodoScreen() {
           keyboardShouldPersistTaps="handled"
           style={styles.formScroll}
         >
-          {isLoading ? <Text style={styles.statusText}>TODO를 불러오는 중이에요.</Text> : null}
+          {isLoading ? <Text style={styles.statusText}>할 일을 불러오는 중이에요.</Text> : null}
 
           {!isLoading ? (
             <>
@@ -182,7 +182,7 @@ export default function EditTodoScreen() {
                 <Text style={styles.label}>제목</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="예: 화장실 청소"
+                  placeholder="예: 주간 회고"
                   placeholderTextColor="#99998E"
                   value={title}
                   onChangeText={setTitle}
@@ -231,7 +231,7 @@ export default function EditTodoScreen() {
 
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="TODO 삭제"
+                accessibilityLabel="할 일 삭제"
                 disabled={isSaving || isDeleting}
                 onPress={() => setIsDeleteModalVisible(true)}
                 style={({ pressed }) => [
@@ -240,7 +240,7 @@ export default function EditTodoScreen() {
                   pressed && !isSaving && !isDeleting && styles.dangerButtonPressed,
                 ]}
               >
-                <Text style={styles.dangerButtonText}>TODO 삭제</Text>
+                <Text style={styles.dangerButtonText}>할 일 삭제</Text>
               </Pressable>
             </>
           ) : null}
@@ -255,7 +255,7 @@ export default function EditTodoScreen() {
         <View style={[styles.bottomAction, { paddingBottom: Math.max(insets.bottom, 16) }]}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="TODO 저장"
+            accessibilityLabel="할 일 저장"
             disabled={isSubmitDisabled}
             style={({ pressed }) => [
               styles.primaryButton,
@@ -274,7 +274,7 @@ export default function EditTodoScreen() {
           isConfirming={isDeleting}
           onCancel={() => setIsDeleteModalVisible(false)}
           onConfirm={handleDelete}
-          title="TODO를 삭제할까요?"
+          title="할 일을 삭제할까요?"
           visible={isDeleteModalVisible}
         />
       </KeyboardAvoidingView>

@@ -92,19 +92,14 @@ function getPreviousCompletionMeta(occurrence: ChoreOccurrence) {
 
 const styles = StyleSheet.create({
   section: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: '#E4E2DA',
+    marginBottom: 24,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 12,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   sectionTitle: {
     flex: 1,

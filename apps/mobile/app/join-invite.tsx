@@ -121,7 +121,8 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: 14,
-    color: '#55564E',
+    lineHeight: 20,
+    color: '#B3261E',
   },
   primaryButton: {
     minHeight: 52,

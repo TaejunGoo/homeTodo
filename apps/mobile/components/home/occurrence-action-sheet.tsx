@@ -30,12 +30,12 @@ export function OccurrenceActionSheet({
         },
         {
           label: '이력 보기',
-          accessibilityLabel: 'TODO 이력 보기',
+          accessibilityLabel: '할 일 이력 보기',
           onPress: onViewHistory,
         },
         {
-          label: 'TODO 수정/삭제',
-          accessibilityLabel: 'TODO 수정 및 삭제',
+          label: '할 일 수정/삭제',
+          accessibilityLabel: '할 일 수정 및 삭제',
           onPress: onEdit,
         },
         {
@@ -46,7 +46,7 @@ export function OccurrenceActionSheet({
         },
       ]}
       onClose={onClose}
-      title={occurrence?.chore.title ?? 'TODO 메뉴'}
+      title={occurrence?.chore.title ?? '할 일 메뉴'}
       visible={occurrence !== null}
     />
   );

@@ -83,7 +83,7 @@ export function useHomeOccurrences(currentSpaceId: string | null) {
       setSections(previousSections);
       Toast.show({
         type: 'error',
-        text1: 'TODO를 완료하지 못했어요.',
+        text1: '할 일을 완료하지 못했어요.',
       });
     } finally {
       setCompletingKey(null);

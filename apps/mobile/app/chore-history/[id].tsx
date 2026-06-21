@@ -36,7 +36,7 @@ export default function ChoreHistoryScreen() {
       setChore(null);
       setItems([]);
       setHasMore(false);
-      setErrorMessage('TODO 이력을 찾지 못했어요.');
+      setErrorMessage('할 일 이력을 찾지 못했어요.');
       setIsLoading(false);
       return;
     }
@@ -61,7 +61,7 @@ export default function ChoreHistoryScreen() {
       setChore(null);
       setItems([]);
       setHasMore(false);
-      setErrorMessage('TODO 이력을 불러오지 못했어요.');
+      setErrorMessage('할 일 이력을 불러오지 못했어요.');
     } finally {
       setIsLoading(false);
     }
@@ -119,18 +119,18 @@ export default function ChoreHistoryScreen() {
           <Text style={styles.backText}>‹ 뒤로</Text>
         </Pressable>
 
-        <Text style={styles.headerTitle}>TODO 이력</Text>
+        <Text style={styles.headerTitle}>할 일 이력</Text>
 
         <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content} style={styles.scroll}>
         <View style={styles.summary}>
-          <Text style={styles.title}>{chore?.title ?? 'TODO 이력'}</Text>
+          <Text style={styles.title}>{chore?.title ?? '할 일 이력'}</Text>
           {chore ? <Text style={styles.description}>{getRecurrenceLabel(chore)}</Text> : null}
         </View>
 
-        {isLoading ? <LoadingState message="TODO 이력을 불러오는 중이에요." /> : null}
+        {isLoading ? <LoadingState message="할 일 이력을 불러오는 중이에요." /> : null}
 
         {!isLoading && errorMessage ? (
           <ErrorState message={errorMessage} actionLabel="다시 시도" onActionPress={loadHistory} />
@@ -139,7 +139,7 @@ export default function ChoreHistoryScreen() {
         {hasNoHistory ? (
           <EmptyState
             title="아직 이력이 없어요"
-            description="이 TODO를 완료하거나 완료 취소하면 이곳에 기록돼요."
+            description="이 할 일을 완료하거나 완료 취소하면 이곳에 기록돼요."
           />
         ) : null}
 
@@ -164,7 +164,7 @@ export default function ChoreHistoryScreen() {
             {hasMore ? (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="TODO 이력 더 보기"
+                accessibilityLabel="할 일 이력 더 보기"
                 disabled={isLoadingMore}
                 onPress={loadMoreHistory}
                 style={({ pressed }) => [

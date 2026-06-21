@@ -16,6 +16,10 @@ export default function CreateSpaceScreen() {
   const isSubmitDisabled = trimmedSpaceName.length === 0 || isSubmitting;
 
   async function handleCreateSpace() {
+    if (isSubmitDisabled) {
+      return;
+    }
+
     setErrorMessage('');
     setIsSubmitting(true);
 
@@ -37,7 +41,7 @@ export default function CreateSpaceScreen() {
       <View style={styles.content}>
         <ScreenHeading
           title="새 스페이스"
-          description="함께 관리할 집안일 공간을 만들어요."
+          description="함께 관리할 할 일 공간을 만들어요."
           showBackButton
         />
 
@@ -47,9 +51,11 @@ export default function CreateSpaceScreen() {
             style={styles.input}
             value={spaceName}
             onChangeText={setSpaceName}
-            placeholder="예: 우리집"
+            placeholder="예: 우리 팀"
             placeholderTextColor="#99998E"
             returnKeyType="done"
+            submitBehavior="blurAndSubmit"
+            onSubmitEditing={handleCreateSpace}
           />
         </View>
 

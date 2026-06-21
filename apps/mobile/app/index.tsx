@@ -15,7 +15,12 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const { currentSpace, currentSpaceId } = useSpace();
+  const {
+    currentSpace,
+    currentSpaceId,
+    isLoading: isSpaceLoading,
+    refreshSpaces,
+  } = useSpace();
   const {
     completedCount,
     completeOccurrence,
@@ -35,6 +40,7 @@ export default function HomeScreen() {
   } = useHomeOccurrences(currentSpaceId);
   const [confirmUncompleteOccurrence, setConfirmUncompleteOccurrence] =
     useState<ChoreOccurrence | null>(null);
+  const hasNoCurrentSpace = !currentSpaceId && !isSpaceLoading;
 
   function handlePressOccurrence(occurrence: ChoreOccurrence) {
     if (occurrence.isCompleted) {
@@ -61,33 +67,48 @@ export default function HomeScreen() {
       <AppHeader
         onPressSettings={() => router.push('/settings')}
         onPressSpace={() => router.push('/select-space')}
-        spaceName={currentSpace?.name ?? '스페이스 없음'}
+        spaceName={currentSpace?.name ?? (isSpaceLoading ? '불러오는 중' : '스페이스 없음')}
       />
 
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.summary}>
-          <Text style={styles.summaryTitle}>오늘 할 집안일</Text>
-          <Text style={styles.summaryText}>
-            현재 기간 기준 {completedCount}/{totalCount}개를 완료했어요.
-          </Text>
-        </View>
+        {currentSpaceId ? (
+          <View style={styles.summary}>
+            <Text style={styles.summaryTitle}>오늘 할 일</Text>
+            <Text style={styles.summaryText}>
+              현재 기간 기준 {completedCount}/{totalCount}개를 완료했어요.
+            </Text>
+          </View>
+        ) : null}
 
-        {isLoading ? <LoadingState message="오늘 할 일을 불러오는 중이에요." /> : null}
+        {isSpaceLoading ? <LoadingState message="스페이스를 불러오는 중이에요." /> : null}
 
-        {!isLoading && errorMessage ? (
+        {!isSpaceLoading && isLoading ? (
+          <LoadingState message="오늘 할 일을 불러오는 중이에요." />
+        ) : null}
+
+        {!isSpaceLoading && !isLoading && errorMessage ? (
           <ErrorState message={errorMessage} actionLabel="다시 시도" onActionPress={loadOccurrences} />
         ) : null}
 
-        {hasNoOccurrences ? (
+        {hasNoCurrentSpace ? (
+          <ErrorState
+            title="스페이스를 찾지 못했어요"
+            message="기본 스페이스가 자동으로 만들어져야 해요. 잠시 후 다시 불러와 주세요."
+            actionLabel="다시 불러오기"
+            onActionPress={refreshSpaces}
+          />
+        ) : null}
+
+        {currentSpaceId && !isSpaceLoading && hasNoOccurrences ? (
           <EmptyState
-            title="오늘 표시할 TODO가 없어요"
-            description="TODO 만들기 버튼으로 반복 집안일을 추가해요."
-            actionLabel="TODO 만들기"
+            title="오늘 표시할 할 일이 없어요"
+            description="할 일 만들기 버튼으로 반복 할 일을 추가해요."
+            actionLabel="할 일 만들기"
             onActionPress={() => router.push('/create-todo')}
           />
         ) : null}
 
-        {!isLoading && !errorMessage
+        {currentSpaceId && !isSpaceLoading && !isLoading && !errorMessage
           ? sections.map((section) => (
               <OccurrenceSection
                 key={section.type}
@@ -98,18 +119,20 @@ export default function HomeScreen() {
             ))
           : null}
       </ScrollView>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="TODO 만들기"
-        onPress={() => router.push('/create-todo')}
-        style={({ pressed }) => [
-          styles.floatingButton,
-          { bottom: insets.bottom + 24 },
-          pressed && styles.floatingButtonPressed,
-        ]}
-      >
-        <Text style={styles.floatingButtonText}>+</Text>
-      </Pressable>
+      {currentSpaceId ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="할 일 만들기"
+          onPress={() => router.push('/create-todo')}
+          style={({ pressed }) => [
+            styles.floatingButton,
+            { bottom: insets.bottom + 24 },
+            pressed && styles.floatingButtonPressed,
+          ]}
+        >
+          <Text style={styles.floatingButtonText}>+</Text>
+        </Pressable>
+      ) : null}
       <OccurrenceActionSheet
         occurrence={selectedOccurrence}
         onClose={() => setSelectedOccurrence(null)}

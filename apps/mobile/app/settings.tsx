@@ -82,23 +82,18 @@ export default function SettingsScreen() {
 
 function ManagementSection() {
   return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>관리</Text>
-      <View style={styles.managementActions}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="완료 이력"
-          onPress={() => router.push('/history')}
-          style={({ pressed }) => [
-            styles.managementButton,
-            pressed && styles.managementButtonPressed,
-          ]}
-        >
-          <Text style={styles.managementButtonTitle}>완료 이력</Text>
-          <Text style={styles.managementButtonDescription}>스페이스의 완료 기록을 확인해요.</Text>
-        </Pressable>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="완료 이력"
+      onPress={() => router.push('/history')}
+      style={({ pressed }) => [styles.managementRow, pressed && styles.managementRowPressed]}
+    >
+      <View style={styles.managementRowText}>
+        <Text style={styles.managementRowTitle}>완료 이력</Text>
+        <Text style={styles.managementRowDescription}>스페이스의 완료 기록을 확인해요.</Text>
       </View>
-    </View>
+      <Text style={styles.managementRowChevron}>›</Text>
+    </Pressable>
   );
 }
 
@@ -144,46 +139,39 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#77776B',
   },
-  section: {
+  managementRow: {
+    minHeight: 64,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E4E2DA',
     backgroundColor: '#FFFFFF',
-    padding: 16,
-    marginBottom: 14,
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#1F2520',
-    marginBottom: 12,
-  },
-  managementActions: {
-    gap: 8,
-  },
-  managementButton: {
-    minHeight: 58,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#E4E2DA',
-    backgroundColor: '#F7F7F4',
-    justifyContent: 'center',
+    marginBottom: 22,
     paddingHorizontal: 14,
-    paddingVertical: 10,
-    gap: 3,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
-  managementButtonPressed: {
+  managementRowPressed: {
     opacity: 0.78,
     transform: [{ scale: 0.99 }],
   },
-  managementButtonTitle: {
-    fontSize: 15,
+  managementRowText: {
+    flex: 1,
+    gap: 3,
+  },
+  managementRowTitle: {
+    fontSize: 16,
     fontWeight: '700',
     color: '#1F2520',
   },
-  managementButtonDescription: {
+  managementRowDescription: {
     fontSize: 13,
     color: '#77776B',
+  },
+  managementRowChevron: {
+    fontSize: 28,
+    color: '#B9B9B0',
   },
   logoutButton: {
     minHeight: 48,
