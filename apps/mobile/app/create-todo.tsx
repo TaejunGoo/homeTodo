@@ -1,5 +1,5 @@
 import { useSpace } from '@/contexts/space-context';
-import { createChore, type RecurrenceType } from '@/lib/chores';
+import { createChore, normalizeRecurrenceInput, type RecurrenceType } from '@/lib/chores';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -32,6 +32,8 @@ export default function CreateTodoScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const trimmedTitle = title.trim();
+  const intervalNumber = Number(intervalDays);
+  const isDailyInterval = recurrenceType === 'interval_days' && intervalNumber === 1;
   const isSubmitDisabled = trimmedTitle.length === 0 || isSubmitting;
 
   async function handleCreate() {
@@ -45,8 +47,6 @@ export default function CreateTodoScreen() {
       return;
     }
 
-    const intervalNumber = Number(intervalDays);
-
     if (
       recurrenceType === 'interval_days' &&
       (!Number.isInteger(intervalNumber) || intervalNumber <= 0)
@@ -59,11 +59,15 @@ export default function CreateTodoScreen() {
     setIsSubmitting(true);
 
     try {
+      const normalizedRecurrence = normalizeRecurrenceInput(
+        recurrenceType,
+        recurrenceType === 'interval_days' ? intervalNumber : null,
+      );
+
       await createChore({
         spaceId: currentSpaceId,
         title: trimmedTitle,
-        recurrenceType,
-        recurrenceValue: recurrenceType === 'interval_days' ? intervalNumber : null,
+        ...normalizedRecurrence,
         startDate: getTodayDateString(),
       });
       Toast.show({
@@ -147,6 +151,9 @@ export default function CreateTodoScreen() {
                   placeholder="예: 3"
                   placeholderTextColor="#99998E"
                 />
+                {isDailyInterval ? (
+                  <Text style={styles.helpText}>1일마다는 매일 반복으로 등록돼요.</Text>
+                ) : null}
               </View>
             ) : null}
 
@@ -318,5 +325,9 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 14,
     color: '#C0392B',
+  },
+  helpText: {
+    fontSize: 13,
+    color: '#77776B',
   },
 });

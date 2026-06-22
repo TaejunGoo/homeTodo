@@ -29,6 +29,7 @@ export function OccurrenceSection({
       {section.occurrences.map((occurrence) => (
         <OccurrenceListItem
           key={occurrence.chore.id}
+          sectionPeriodLabel={section.periodLabel}
           occurrence={occurrence}
           onOpenMenu={onOpenMenu}
           onPressOccurrence={onPressOccurrence}
@@ -39,10 +40,12 @@ export function OccurrenceSection({
 }
 
 function OccurrenceListItem({
+  sectionPeriodLabel,
   occurrence,
   onOpenMenu,
   onPressOccurrence,
 }: {
+  sectionPeriodLabel: string | null;
   occurrence: ChoreOccurrence;
   onOpenMenu: (occurrence: ChoreOccurrence) => void;
   onPressOccurrence: (occurrence: ChoreOccurrence) => void;
@@ -50,8 +53,9 @@ function OccurrenceListItem({
   return (
     <ChoreListItem
       title={occurrence.chore.title}
-      meta={getOccurrenceMeta(occurrence)}
+      meta={getOccurrenceMeta(occurrence, sectionPeriodLabel)}
       completed={occurrence.isCompleted}
+      recentCompletionStatuses={occurrence.recentCompletionStatuses}
       showCheckbox
       onPress={() => {
         onPressOccurrence(occurrence);
@@ -63,31 +67,12 @@ function OccurrenceListItem({
   );
 }
 
-function getOccurrenceMeta(occurrence: ChoreOccurrence) {
-  const metaItems: string[] = [];
-
+function getOccurrenceMeta(occurrence: ChoreOccurrence, sectionPeriodLabel: string | null) {
   if (occurrence.recurrenceType !== 'interval_days') {
-    return getPreviousCompletionMeta(occurrence);
-  }
-
-  metaItems.push(`${occurrence.chore.recurrenceValue ?? '-'}일마다`);
-  metaItems.push(occurrence.periodLabel);
-
-  const previousCompletionMeta = getPreviousCompletionMeta(occurrence);
-
-  if (previousCompletionMeta) {
-    metaItems.push(previousCompletionMeta);
-  }
-
-  return metaItems.join(' · ');
-}
-
-function getPreviousCompletionMeta(occurrence: ChoreOccurrence) {
-  if (occurrence.wasPreviousCompleted === null) {
     return undefined;
   }
 
-  return occurrence.wasPreviousCompleted ? '지난번 완료' : '지난번 미완료';
+  return sectionPeriodLabel === null ? occurrence.periodLabel : undefined;
 }
 
 const styles = StyleSheet.create({

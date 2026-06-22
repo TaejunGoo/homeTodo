@@ -19,6 +19,9 @@ export function updateOccurrenceCompletion(
       return {
         ...occurrence,
         isCompleted,
+        recentCompletionStatuses: occurrence.recentCompletionStatuses.map((status, index) =>
+          index === 0 ? isCompleted : status,
+        ),
       };
     }),
   }));

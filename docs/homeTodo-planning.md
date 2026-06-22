@@ -173,7 +173,7 @@ MVP에서는 Occurrence를 DB 테이블로 저장하지 않고, 프론트엔드�
 - `daily`: 사용하지 않음. 하루에 1회
 - `weekly`: 사용하지 않음. ISO 8601 기준 한 주에 1회
 - `monthly`: 사용하지 않음. 한 달에 1회
-- `interval_days`: 반복 간격 일수. 예: `3`이면 시작일 기준 3일마다 반복
+- `interval_days`: 반복 간격 일수. 예: `3`이면 시작일 기준 3일마다 반복. `1일마다`는 `daily`와 의미가 같으므로 저장 시 `daily`로 정규화한다.
 
 MVP의 `daily`, `weekly`, `monthly`는 특정 요일이나 특정 날짜에 고정되지 않는다.
 핵심은 해당 기간 안에 1회 완료하면 된다는 점이다.
@@ -317,7 +317,7 @@ Figma에서는 아래 프레임을 기준으로 먼저 그린다.
 - `FloatingActionButton`: TODO 생성 화면으로 이동하는 우측 하단 플러스 버튼
 - `AppHeader`: Space 선택 버튼, Space 이름, 설정 버튼을 포함하는 상단 헤더
 - `SpacePickerModal`: 참여 중인 Space 목록을 보여주고 Space를 전환하는 모달
-- `PeriodSection`: `매일`, `매주`, `매월`, `N일마다` 같은 주기별 TODO 컨테이너
+- `PeriodSection`: `매일`, `매주`, `매월`, `3일마다`, `14일마다` 같은 주기별 TODO 컨테이너. `N일마다`는 반복값별로 별도 섹션을 만든다.
 - `ChoreListItem`: 집안일 제목, 반복 주기, 현재 기간 완료 여부, 완료 버튼
 - `CompletionListItem`: 완료된 집안일 제목, 완료자, 완료 시간
 - `SpaceListItem`: Space 이름, 멤버 수

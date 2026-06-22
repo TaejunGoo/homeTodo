@@ -31,6 +31,7 @@ packages/supabase/migrations/
   202606120008_grant_space_admin_helper.sql
   202606120009_fix_create_invite_code_ambiguous_columns.sql
   202606140001_restrict_invite_select_to_space_admins.sql
+  202606220001_normalize_daily_interval_chores.sql
 ```
 
 Current MVP security baseline:

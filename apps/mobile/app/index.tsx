@@ -111,7 +111,7 @@ export default function HomeScreen() {
         {currentSpaceId && !isSpaceLoading && !isLoading && !errorMessage
           ? sections.map((section) => (
               <OccurrenceSection
-                key={section.type}
+                key={section.id}
                 section={section}
                 onOpenMenu={setSelectedOccurrence}
                 onPressOccurrence={handlePressOccurrence}

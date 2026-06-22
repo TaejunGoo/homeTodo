@@ -1,5 +1,11 @@
 import { ConfirmModal } from '@/components/confirm-modal';
-import { deactivateChore, getChore, updateChore, type RecurrenceType } from '@/lib/chores';
+import {
+  deactivateChore,
+  getChore,
+  normalizeRecurrenceInput,
+  updateChore,
+  type RecurrenceType,
+} from '@/lib/chores';
 import { getProfilesByIds } from '@/lib/profiles';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -38,6 +44,8 @@ export default function EditTodoScreen() {
   const [createdAt, setCreatedAt] = useState('');
 
   const trimmedTitle = title.trim();
+  const intervalNumber = Number(intervalDays);
+  const isDailyInterval = recurrenceType === 'interval_days' && intervalNumber === 1;
   const isSubmitDisabled = trimmedTitle.length === 0 || isLoading || isSaving || isDeleting;
 
   function closeEditScreen() {
@@ -91,8 +99,6 @@ export default function EditTodoScreen() {
       return;
     }
 
-    const intervalNumber = Number(intervalDays);
-
     if (
       recurrenceType === 'interval_days' &&
       (!Number.isInteger(intervalNumber) || intervalNumber <= 0)
@@ -105,11 +111,15 @@ export default function EditTodoScreen() {
     setIsSaving(true);
 
     try {
+      const normalizedRecurrence = normalizeRecurrenceInput(
+        recurrenceType,
+        recurrenceType === 'interval_days' ? intervalNumber : null,
+      );
+
       await updateChore({
         id,
         title: trimmedTitle,
-        recurrenceType,
-        recurrenceValue: recurrenceType === 'interval_days' ? intervalNumber : null,
+        ...normalizedRecurrence,
       });
       Toast.show({
         type: 'success',
@@ -220,6 +230,9 @@ export default function EditTodoScreen() {
                       placeholder="예: 3"
                       placeholderTextColor="#99998E"
                     />
+                    {isDailyInterval ? (
+                      <Text style={styles.helpText}>1일마다는 매일 반복으로 저장돼요.</Text>
+                    ) : null}
                   </View>
                 ) : null}
               </View>
@@ -494,5 +507,9 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 14,
     color: '#C0392B',
+  },
+  helpText: {
+    fontSize: 13,
+    color: '#77776B',
   },
 });

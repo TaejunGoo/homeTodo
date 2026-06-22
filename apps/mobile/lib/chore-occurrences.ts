@@ -6,6 +6,8 @@ export interface ChoreOccurrence {
   recurrenceType: RecurrenceType;
   targetPeriodStart: string;
   previousTargetPeriodStart: string | null;
+  recentTargetPeriodStarts: string[];
+  recentCompletionStatuses: boolean[];
   periodLabel: string;
   isCompleted: boolean;
   completedAt: string | null;
@@ -14,6 +16,7 @@ export interface ChoreOccurrence {
 }
 
 export interface ChoreOccurrenceSection {
+  id: string;
   title: string;
   type: RecurrenceType;
   periodLabel: string | null;
@@ -49,11 +52,9 @@ export async function getCurrentChoreOccurrenceSections(
     const completion = completionMap.get(
       getCompletionKey(occurrence.chore.id, occurrence.targetPeriodStart),
     );
-    const previousCompletion = occurrence.previousTargetPeriodStart
-      ? completionMap.get(
-          getCompletionKey(occurrence.chore.id, occurrence.previousTargetPeriodStart),
-        )
-      : null;
+    const recentCompletionStatuses = occurrence.recentTargetPeriodStarts.map((periodStart) =>
+      completionMap.has(getCompletionKey(occurrence.chore.id, periodStart)),
+    );
 
     return {
       ...occurrence,
@@ -61,8 +62,9 @@ export async function getCurrentChoreOccurrenceSections(
       completedAt: completion?.completed_at ?? null,
       completedBy: completion?.completed_by ?? null,
       wasPreviousCompleted: occurrence.previousTargetPeriodStart
-        ? Boolean(previousCompletion)
+        ? recentCompletionStatuses[1] ?? false
         : null,
+      recentCompletionStatuses,
     };
   });
 
@@ -97,12 +99,15 @@ function buildCurrentOccurrence(chore: Chore, today: Date): ChoreOccurrence | nu
   }
 
   const previousTargetPeriodStart = getPreviousTargetPeriodStart(chore, targetPeriodStart);
+  const recentTargetPeriodStarts = getRecentTargetPeriodStarts(chore, targetPeriodStart, 3);
 
   return {
     chore,
     recurrenceType: chore.recurrenceType,
     targetPeriodStart,
     previousTargetPeriodStart,
+    recentTargetPeriodStarts,
+    recentCompletionStatuses: recentTargetPeriodStarts.map(() => false),
     periodLabel: getChorePeriodLabel(chore, targetPeriodStart),
     isCompleted: false,
     completedAt: null,
@@ -117,11 +122,7 @@ async function getMatchingCompletions(
 ): Promise<ChoreCompletionRow[]> {
   const periodStarts = [
     ...new Set(
-      occurrences.flatMap((occurrence) =>
-        occurrence.previousTargetPeriodStart
-          ? [occurrence.targetPeriodStart, occurrence.previousTargetPeriodStart]
-          : [occurrence.targetPeriodStart],
-      ),
+      occurrences.flatMap((occurrence) => occurrence.recentTargetPeriodStarts),
     ),
   ];
 
@@ -137,12 +138,9 @@ async function getMatchingCompletions(
 
   const occurrenceKeys = new Set(
     occurrences.flatMap((occurrence) =>
-      occurrence.previousTargetPeriodStart
-        ? [
-            getCompletionKey(occurrence.chore.id, occurrence.targetPeriodStart),
-            getCompletionKey(occurrence.chore.id, occurrence.previousTargetPeriodStart),
-          ]
-        : [getCompletionKey(occurrence.chore.id, occurrence.targetPeriodStart)],
+      occurrence.recentTargetPeriodStarts.map((periodStart) =>
+        getCompletionKey(occurrence.chore.id, periodStart),
+      ),
     ),
   );
 
@@ -152,18 +150,56 @@ async function getMatchingCompletions(
 }
 
 function buildSections(occurrences: ChoreOccurrence[]): ChoreOccurrenceSection[] {
-  return recurrenceSections.map((section) => {
-    const sectionOccurrences = occurrences
-      .filter((occurrence) => occurrence.recurrenceType === section.type)
-      .sort(compareOccurrences);
+  return recurrenceSections.flatMap((section) => {
+    if (section.type === 'interval_days') {
+      return buildIntervalSections(occurrences);
+    }
+
+    const sectionOccurrences = getSectionOccurrences(occurrences, section.type);
 
     return {
+      id: section.type,
       ...section,
-      periodLabel:
-        section.type === 'interval_days' ? null : getSectionPeriodLabel(sectionOccurrences),
+      periodLabel: getSectionPeriodLabel(sectionOccurrences),
       occurrences: sectionOccurrences,
     };
   });
+}
+
+function buildIntervalSections(occurrences: ChoreOccurrence[]): ChoreOccurrenceSection[] {
+  const intervalGroups = new Map<number, ChoreOccurrence[]>();
+
+  for (const occurrence of occurrences) {
+    if (occurrence.recurrenceType !== 'interval_days') {
+      continue;
+    }
+
+    const intervalDays = occurrence.chore.recurrenceValue ?? 1;
+    const groupOccurrences = intervalGroups.get(intervalDays) ?? [];
+
+    groupOccurrences.push(occurrence);
+    intervalGroups.set(intervalDays, groupOccurrences);
+  }
+
+  return [...intervalGroups.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([intervalDays, groupOccurrences]) => {
+      const sectionOccurrences = [...groupOccurrences].sort(compareOccurrences);
+
+      return {
+        id: `interval_days:${intervalDays}`,
+        title: `${intervalDays}일마다`,
+        type: 'interval_days',
+        periodLabel: getSectionPeriodLabel(sectionOccurrences),
+        occurrences: sectionOccurrences,
+      };
+    });
+}
+
+function getSectionOccurrences(occurrences: ChoreOccurrence[], type: RecurrenceType) {
+  return occurrences
+    .filter((occurrence) => occurrence.recurrenceType === type)
+    .sort(compareOccurrences);
 }
 
 function compareOccurrences(a: ChoreOccurrence, b: ChoreOccurrence) {
@@ -240,6 +276,21 @@ function getPreviousTargetPeriodStart(chore: Chore, targetPeriodStart: string) {
   }
 
   return formatDateKey(previousPeriodStart);
+}
+
+function getRecentTargetPeriodStarts(chore: Chore, targetPeriodStart: string, count: number) {
+  const periodStarts = [targetPeriodStart];
+  let currentPeriodStart: string | null = targetPeriodStart;
+
+  while (periodStarts.length < count && currentPeriodStart) {
+    currentPeriodStart = getPreviousTargetPeriodStart(chore, currentPeriodStart);
+
+    if (currentPeriodStart) {
+      periodStarts.push(currentPeriodStart);
+    }
+  }
+
+  return periodStarts;
 }
 
 function startOfIsoWeek(date: Date) {

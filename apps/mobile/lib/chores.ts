@@ -31,6 +31,11 @@ interface UpdateChoreInput {
   recurrenceValue: number | null;
 }
 
+interface NormalizedRecurrenceInput {
+  recurrenceType: RecurrenceType;
+  recurrenceValue: number | null;
+}
+
 export const recurrenceSections: { title: string; type: RecurrenceType }[] = [
   { title: '매일', type: 'daily' },
   { title: '매주', type: 'weekly' },
@@ -153,6 +158,30 @@ export function getRecurrenceLabel(chore: Pick<Chore, 'recurrenceType' | 'recurr
     case 'interval_days':
       return `${chore.recurrenceValue ?? '-'}일마다 반복`;
   }
+}
+
+export function normalizeRecurrenceInput(
+  recurrenceType: RecurrenceType,
+  recurrenceValue: number | null,
+): NormalizedRecurrenceInput {
+  if (recurrenceType !== 'interval_days') {
+    return {
+      recurrenceType,
+      recurrenceValue: null,
+    };
+  }
+
+  if (recurrenceValue === 1) {
+    return {
+      recurrenceType: 'daily',
+      recurrenceValue: null,
+    };
+  }
+
+  return {
+    recurrenceType,
+    recurrenceValue,
+  };
 }
 
 function mapChoreRow(row: {

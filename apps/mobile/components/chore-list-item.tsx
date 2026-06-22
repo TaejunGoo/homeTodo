@@ -5,6 +5,7 @@ type ChoreListItemProps = {
   title: string;
   meta?: string;
   completed?: boolean;
+  recentCompletionStatuses?: boolean[];
   showCheckbox?: boolean;
   onPress?: () => void;
   onMenuPress?: () => void;
@@ -14,6 +15,7 @@ export function ChoreListItem({
   title,
   meta,
   completed = false,
+  recentCompletionStatuses = [],
   showCheckbox = false,
   onPress,
   onMenuPress,
@@ -39,7 +41,27 @@ export function ChoreListItem({
         )}
         <View style={styles.textGroup}>
           <Text style={[styles.title, completed && styles.titleCompleted]}>{title}</Text>
-          {meta && <Text style={styles.meta}>{meta}</Text>}
+          <View style={styles.metaRow}>
+            {meta && <Text style={styles.meta}>{meta}</Text>}
+            {recentCompletionStatuses.length > 0 && (
+              <View
+                accessibilityLabel={`최근 ${recentCompletionStatuses.length}회 중 ${
+                  recentCompletionStatuses.filter(Boolean).length
+                }회 완료`}
+                style={styles.recentStatusGroup}
+              >
+                {[...recentCompletionStatuses].reverse().map((isCompleted, index) => (
+                  <View
+                    key={`${index}-${isCompleted ? 'completed' : 'missed'}`}
+                    style={[
+                      styles.recentStatusDot,
+                      isCompleted ? styles.recentStatusDotCompleted : styles.recentStatusDotMissed,
+                    ]}
+                  />
+                ))}
+              </View>
+            )}
+          </View>
         </View>
       </Pressable>
       <Pressable
@@ -97,7 +119,7 @@ const styles = StyleSheet.create({
   },
   textGroup: {
     flex: 1,
-    gap: 2,
+    gap: 4,
   },
   title: {
     fontSize: 16,
@@ -111,6 +133,30 @@ const styles = StyleSheet.create({
   meta: {
     fontSize: 13,
     color: '#77776B',
+    flexShrink: 1,
+  },
+  metaRow: {
+    minHeight: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  recentStatusGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  recentStatusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+  },
+  recentStatusDotCompleted: {
+    backgroundColor: '#36A269',
+  },
+  recentStatusDotMissed: {
+    backgroundColor: '#D7D5CC',
   },
   more: {
     width: 36,
